@@ -110,8 +110,11 @@ const leaves = notes.map(leaf);
 const tree = merkle(leaves, 3);
 const valid = makeInput(notes[3], tree);
 
-// Positive control.
-assertAccepted(valid, "valid");
+// Positive controls: every leaf position in the depth-8 tree.
+for (let i = 0; i < notes.length; i++) {
+  const t = merkle(leaves, i);
+  assertAccepted(makeInput(notes[i], t, BigInt(987654321 + i)), "valid-" + i);
+}
 
 // Critical selector attack.
 const badBit = structuredClone(valid);
@@ -175,7 +178,7 @@ console.log(JSON.stringify({
   status: "PASS",
   circuit: "TornNote/v0.3",
   depth: 8,
-  positiveWitnesses: 1,
+  positiveWitnesses: 8,
   adversarialWitnessesRejected: 8,
   differentialVectors: 10000,
   attacks: [
