@@ -120,10 +120,6 @@ template TornNote(depth) {
     // Bind the public proof statement to the transaction context.
     // The verifier computes messageHash from Canonical(m) and supplies the
     // resulting txDigest. A proof for another message therefore cannot verify.
-    component tx = Poseidon(3);
-    tx.inputs[0] <== 4;
-    tx.inputs[1] <== root;
-    tx.inputs[2] <== nullifier;
     // txDigest is the externally computed transaction binding. The messageHash
     // is included through a second domain-separated commitment below.
     component txWithMessage = Poseidon(4);
