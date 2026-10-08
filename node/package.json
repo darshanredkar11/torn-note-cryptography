@@ -1,0 +1,1 @@
+{"name":"@torn-note/protocol","version":"0.1.0","description":"Offline-first torn-note authorization research prototype","type":"module","scripts":{"test":"node --test","benchmark":"node benchmark.js"},"engines":{"node":">=20"},"license":"Apache-2.0"}
