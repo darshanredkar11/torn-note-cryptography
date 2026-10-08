@@ -323,7 +323,7 @@ The intended production direction is:
                               v
                          ONE signature
 
-FROST is specifically designed for threshold Schnorr signatures and is standardized in RFC 9591. Mature implementations exist for multiple curves. citeturn0search0turn0search4
+FROST is specifically designed for threshold Schnorr signatures and is standardized in RFC 9591. The repository should use a mature implementation rather than inventing a new threshold protocol.
 
 The critical invariant is:
 
