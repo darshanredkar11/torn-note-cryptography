@@ -337,7 +337,7 @@ The circuit proves that the hidden note is a member of ROOT, that all three auth
 
 The repository currently contains an **executable reference relation and adversarial test suite**, not a production SNARK. This deliberately separates protocol/security validation from proving-system engineering.
 
-See [docs/ZK_PROTOCOL.md](docs/ZK_PROTOCOL.md), [docs/ZK_SECURITY.md](docs/ZK_SECURITY.md), and [zk/README.md](../zk/README.md).
+See [docs/ZK_PROTOCOL.md](docs/ZK_PROTOCOL.md), [docs/ZK_SECURITY.md](docs/ZK_SECURITY.md), and [zk/README.md](zk/README.md).
 
 
 # 10. Why FROST?
