@@ -310,6 +310,36 @@ Full details: [docs/BENCHMARKS.md](docs/BENCHMARKS.md).
 
 ---
 
+# 10. ZK nullifier direction (v0.2)
+
+The next protocol version removes the public link between a spent note and its inventory leaf.
+
+A spend exposes only:
+
+    ROOT + nullifier eta + transaction digest Dtx + ZK proof
+
+The private witness contains:
+
+    x + zA + zB + noteId + r + Merkle path
+
+The nullifier is derived as:
+
+    K_N = H("TORN-NULLIFIER-KEY/v2", x, zA, zB)
+    eta = H("TORN-NULLIFIER/v2", K_N, noteId)
+
+The transaction binding is:
+
+    Dtx = H("TORN-TX/v2", ROOT, eta, Canonical(m))
+
+The circuit proves that the hidden note is a member of ROOT, that all three authorization secrets are known, that eta is the correct nullifier for that note, and that Dtx binds the exact transaction.
+
+### Important status
+
+The repository currently contains an **executable reference relation and adversarial test suite**, not a production SNARK. This deliberately separates protocol/security validation from proving-system engineering.
+
+See [docs/ZK_PROTOCOL.md](docs/ZK_PROTOCOL.md), [docs/ZK_SECURITY.md](docs/ZK_SECURITY.md), and [zk/README.md](../zk/README.md).
+
+
 # 10. Why FROST?
 
 Three signatures demonstrate the authorization semantics, but they are not the final cryptographic form.
