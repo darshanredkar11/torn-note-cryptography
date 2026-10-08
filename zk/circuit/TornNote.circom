@@ -63,6 +63,7 @@ template TornNote(depth) {
     signal private input r;
     signal private input siblings[depth];
     signal private input pathBits[depth];
+    signal private input messageHash;
 
     // Prevent scalar aliases and enforce x,zA,zB < BabyJubjub subgroup order.
     component sx = ValidBabyJubScalar();
@@ -116,10 +117,21 @@ template TornNote(depth) {
     eta.inputs[2] <== noteId;
     eta.out === nullifier;
 
-    // txDigest is deliberately a public statement.
-    // The verifier computes it from (ROOT, eta, Canonical(m)) and supplies it.
-    // The circuit therefore binds the proof to exactly the verifier-supplied digest.
-    txDigest === txDigest;
+    // Bind the public proof statement to the transaction context.
+    // The verifier computes messageHash from Canonical(m) and supplies the
+    // resulting txDigest. A proof for another message therefore cannot verify.
+    component tx = Poseidon(3);
+    tx.inputs[0] <== 4;
+    tx.inputs[1] <== root;
+    tx.inputs[2] <== nullifier;
+    // txDigest is the externally computed transaction binding. The messageHash
+    // is included through a second domain-separated commitment below.
+    component txWithMessage = Poseidon(4);
+    txWithMessage.inputs[0] <== 5;
+    txWithMessage.inputs[1] <== root;
+    txWithMessage.inputs[2] <== nullifier;
+    txWithMessage.inputs[3] <== messageHash;
+    txWithMessage.out === txDigest;
 }
 
 component main {public [root, nullifier, txDigest]} = TornNote(8);
