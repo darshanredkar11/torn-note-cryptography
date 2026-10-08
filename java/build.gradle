@@ -1,0 +1,1 @@
+plugins{id 'java'} group='io.tornnote';version='0.1.0';repositories{mavenCentral()};java{toolchain{languageVersion=JavaLanguageVersion.of(21)}};dependencies{testImplementation 'org.junit.jupiter:junit-jupiter:5.11.3'};test{useJUnitPlatform()}
