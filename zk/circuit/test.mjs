@@ -119,7 +119,7 @@ badBit.pathBits[0] = "2";
 assertRejected(badBit, "path-bit-2");
 
 const badBitMax = structuredClone(valid);
-badBitMax.pathBits[0] = babyjub.F.p.sub(1n).toString();
+badBitMax.pathBits[0] = (BigInt(babyjub.F.p.toString()) - 1n).toString();
 assertRejected(badBitMax, "path-bit-field-max");
 
 // Scalar alias attack: x + subgroup order represents the same group scalar,
