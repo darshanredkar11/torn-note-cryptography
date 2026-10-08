@@ -1,0 +1,58 @@
+name: ZK Circuit Security
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  circuit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: zk/circuit
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: zk/circuit/package.json
+
+      - name: Install Circom 2.2.3
+        run: |
+          curl -fsSL https://github.com/iden3/circom/releases/download/v2.2.3/circom-linux-amd64 -o /tmp/circom
+          chmod +x /tmp/circom
+          sudo mv /tmp/circom /usr/local/bin/circom
+          circom --version
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Compile with constraint inspection
+        run: |
+          rm -rf build
+          mkdir -p build
+          circom TornNote.circom --r1cs --wasm --sym --inspect --sanity_check 2 --output build -l node_modules
+
+      - name: Run adversarial circuit tests
+        run: npm test
+
+  circomspect:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: zk/circuit
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Circomspect
+        run: cargo install circomspect --locked
+
+      - name: Static circuit analysis
+        run: circomspect TornNote.circom --level WARNING
