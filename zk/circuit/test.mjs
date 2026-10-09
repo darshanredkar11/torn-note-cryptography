@@ -104,8 +104,8 @@ function assertRejected(input, name) {
 
 if (!existsSync(WASM)) throw new Error("Circuit not compiled: " + WASM);
 
-// Build one deterministic 8-note inventory and prove membership for note 3.
-const notes = Array.from({ length: 8 }, (_, i) => note(i));
+// Build a deterministic 256-note inventory so the Merkle path has depth 8.
+const notes = Array.from({ length: 256 }, (_, i) => note(i));
 const leaves = notes.map(leaf);
 const tree = merkle(leaves, 3);
 const valid = makeInput(notes[3], tree);
