@@ -93,8 +93,7 @@ function runWitness(input, name) {
 
 function assertAccepted(input, name) {
   const r = runWitness(input, name);
-  if (r.status !== 0) throw new Error("Expected witness acceptance for " + name + "
-" + r.stderr);
+  if (r.status !== 0) throw new Error("Expected witness acceptance for " + name + "\n" + r.stderr);
   execFileSync(process.execPath, [SNARKJS, "wtns", "check", R1CS, r.witness], { stdio: "pipe" });
 }
 
