@@ -93,7 +93,8 @@ function runWitness(input, name) {
 
 function assertAccepted(input, name) {
   const r = runWitness(input, name);
-  if (r.status !== 0) throw new Error("Expected witness acceptance for " + name + "\n" + r.stderr);
+  if (r.status !== 0) throw new Error("Expected witness acceptance for " + name + "
+" + r.stderr);
   execFileSync(process.execPath, [SNARKJS, "wtns", "check", R1CS, r.witness], { stdio: "pipe" });
 }
 
@@ -196,7 +197,10 @@ console.log(JSON.stringify({
   attacks: [
     "path-bit=2",
     "path-bit=field-max",
-    "scalar-alias",\n    "scalar-equals-suborder",\n    "scalar-suborder-plus-one",\n    "scalar-field-max",
+    "scalar-alias",
+    "scalar-equals-suborder",
+    "scalar-suborder-plus-one",
+    "scalar-field-max",
     "wrong-half-A",
     "wrong-nullifier",
     "wrong-Merkle-sibling",
