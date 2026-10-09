@@ -131,6 +131,18 @@ const aliasX = structuredClone(valid);
 aliasX.x = (BigInt(aliasX.x) + SUBORDER).toString();
 assertRejected(aliasX, "scalar-alias");
 
+const atSuborder = structuredClone(valid);
+atSuborder.x = SUBORDER.toString();
+assertRejected(atSuborder, "scalar-equals-suborder");
+
+const aboveSuborder = structuredClone(valid);
+aboveSuborder.x = (SUBORDER + 1n).toString();
+assertRejected(aboveSuborder, "scalar-suborder-plus-one");
+
+const fieldMax = structuredClone(valid);
+fieldMax.x = (BigInt(babyjub.F.p.toString()) - 1n).toString();
+assertRejected(fieldMax, "scalar-field-max");
+
 // Secret substitution.
 const badZA = structuredClone(valid);
 badZA.zA = (BigInt(badZA.zA) + 1n).toString();
@@ -179,12 +191,12 @@ console.log(JSON.stringify({
   circuit: "TornNote/v0.3",
   depth: 8,
   positiveWitnesses: 8,
-  adversarialWitnessesRejected: 8,
+  adversarialWitnessesRejected: 11,
   differentialVectors: 10000,
   attacks: [
     "path-bit=2",
     "path-bit=field-max",
-    "scalar-alias",
+    "scalar-alias",\n    "scalar-equals-suborder",\n    "scalar-suborder-plus-one",\n    "scalar-field-max",
     "wrong-half-A",
     "wrong-nullifier",
     "wrong-Merkle-sibling",
