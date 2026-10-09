@@ -56,14 +56,14 @@ template TornNote(depth) {
     signal input txDigest;
 
     // Private witness.
-    signal private input x;
-    signal private input zA;
-    signal private input zB;
-    signal private input noteId;
-    signal private input r;
-    signal private input siblings[depth];
-    signal private input pathBits[depth];
-    signal private input messageHash;
+    signal input x;
+    signal input zA;
+    signal input zB;
+    signal input noteId;
+    signal input r;
+    signal input siblings[depth];
+    signal input pathBits[depth];
+    signal input messageHash;
 
     // Prevent scalar aliases and enforce x,zA,zB < BabyJubjub subgroup order.
     component sx = ValidBabyJubScalar();
