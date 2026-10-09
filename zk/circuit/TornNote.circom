@@ -25,6 +25,8 @@ template PrivateMerkleMembership(depth) {
     signal output root;
 
     signal cur[depth + 1];
+    signal left[depth];
+    signal right[depth];
     cur[0] <== leaf;
 
     component hashes[depth];
@@ -33,14 +35,12 @@ template PrivateMerkleMembership(depth) {
         // SECURITY CRITICAL: pathBits must be a Boolean field element.
         pathBits[i] * (pathBits[i] - 1) === 0;
 
-        signal left;
-        signal right;
-        left <== (1 - pathBits[i]) * cur[i] + pathBits[i] * siblings[i];
-        right <== pathBits[i] * cur[i] + (1 - pathBits[i]) * siblings[i];
+        left[i] <== (1 - pathBits[i]) * cur[i] + pathBits[i] * siblings[i];
+        right[i] <== pathBits[i] * cur[i] + (1 - pathBits[i]) * siblings[i];
 
         hashes[i] = Poseidon(2);
-        hashes[i].inputs[0] <== left;
-        hashes[i].inputs[1] <== right;
+        hashes[i].inputs[0] <== left[i];
+        hashes[i].inputs[1] <== right[i];
         cur[i + 1] <== hashes[i].out;
     }
 
