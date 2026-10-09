@@ -35,8 +35,9 @@ template PrivateMerkleMembership(depth) {
         // SECURITY CRITICAL: pathBits must be a Boolean field element.
         pathBits[i] * (pathBits[i] - 1) === 0;
 
-        left[i] <== (1 - pathBits[i]) * cur[i] + pathBits[i] * siblings[i];
-        right[i] <== pathBits[i] * cur[i] + (1 - pathBits[i]) * siblings[i];
+        // One multiplication per selector keeps each constraint quadratic.
+        left[i] <== cur[i] + pathBits[i] * (siblings[i] - cur[i]);
+        right[i] <== siblings[i] + pathBits[i] * (cur[i] - siblings[i]);
 
         hashes[i] = Poseidon(2);
         hashes[i].inputs[0] <== left[i];
@@ -115,11 +116,7 @@ template TornNote(depth) {
     eta.inputs[2] <== noteId;
     eta.out === nullifier;
 
-    // Bind the public proof statement to the transaction context.
-    // The verifier computes messageHash from Canonical(m) and supplies the
-    // resulting txDigest. A proof for another message therefore cannot verify.
-    // txDigest is the externally computed transaction binding. The messageHash
-    // is included through a second domain-separated commitment below.
+    // txDigest binds the public transaction context to the private message hash.
     component txWithMessage = Poseidon(4);
     txWithMessage.inputs[0] <== 5;
     txWithMessage.inputs[1] <== root;
