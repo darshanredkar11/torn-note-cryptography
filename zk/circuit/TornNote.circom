@@ -5,14 +5,12 @@ include "node_modules/circomlib/circuits/babyjub.circom";
 include "node_modules/circomlib/circuits/bitify.circom";
 include "node_modules/circomlib/circuits/compconstant.circom";
 
-var BABYJUB_SUBORDER_MINUS_ONE = 2736030358979909402780800718157159386076813972158567259200215660948447373040;
-
 template ValidBabyJubScalar() {
     signal input in;
     component bits = Num2Bits(253);
     bits.in <== in;
 
-    component range = CompConstant(BABYJUB_SUBORDER_MINUS_ONE);
+    component range = CompConstant(2736030358979909402780800718157159386076813972158567259200215660948447373040);
     for (var i = 0; i < 253; i++) {
         bits.out[i] ==> range.in[i];
     }
