@@ -191,7 +191,7 @@ console.log(JSON.stringify({
   circuit: "TornNote/v0.3",
   depth: 8,
   positiveWitnesses: 8,
-  adversarialWitnessesRejected: 11,
+  adversarialWitnessesRejected: 12,
   differentialVectors: 10000,
   attacks: [
     "path-bit=2",
