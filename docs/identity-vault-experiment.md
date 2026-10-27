@@ -38,24 +38,24 @@ Encrypt the payload with AES-256-GCM. Never use real identity documents, product
 - Authenticate enrolled share presentations with the prototype's configured signing keys.
 - Verify that the signed digest binds the complete encrypted envelope, including IV, ciphertext, and authentication tag.
 - Reconstruct the DEK only after two valid shares pass verification.
+- Keep trusted enrollment references separate from the vault record. The demo API returns them separately; a production system would need durable, independently protected enrollment storage.
 
 Do not describe this as threshold signing: the prototype reconstructs a DEK. Do not describe the reference proof code as a production zero-knowledge proof.
 
-## Threat model to test
+## Threat model and tests
 
-Assume an attacker may obtain one share, alter or replay a share presentation, or modify the encrypted envelope. The experiment does not assume that all custodians are independent or uncompromisable. Explicitly document whether signing keys, enrollment references, and share storage are held in separate trust domains.
+The prototype tests the following with synthetic payloads:
 
-## Implemented test cases
-
-1. **Round trip:** correct payload encrypts and decrypts without changes.
+1. **Round trip:** baseline and Torn Note preserve the original plaintext.
 2. **Single-share insufficiency:** one share alone cannot recover the DEK.
 3. **Threshold recovery:** any permitted pair of valid shares recovers the original payload.
-4. **Share substitution/tampering:** modified share bytes fail signature verification.
-5. **Envelope tampering:** modified IV, ciphertext, or tag is rejected by the envelope-bound signing or AES-GCM authentication.
-6. **Wrong KEK:** the baseline rejects decryption with a wrong key.
-7. **Binary and empty payloads:** both approaches preserve byte content.
+4. **Enrollment substitution:** substituted trust references do not authenticate the original presentations.
+5. **Share tampering:** modified share bytes fail signature verification.
+6. **Envelope tampering:** modified IV is rejected by the envelope-bound signatures; AES-GCM also authenticates the payload.
+7. **Wrong KEK / ciphertext modification:** the baseline rejects invalid decryption.
+8. **Binary and empty payloads:** both approaches preserve byte content.
 
-The new identity-vault test file passed locally: **7 passed, 0 failed** in a temporary working copy assembled from the current branch source files. This is not a clean Git checkout and does not establish that the entire repository test suite passes.
+The eight identity-vault tests passed locally in a temporary working copy assembled from the current branch source files: **8 passed, 0 failed**. This is not a clean Git checkout and does not establish that the entire repository test suite passes.
 
 ## Preliminary local microbenchmark
 
@@ -63,10 +63,10 @@ One exploratory run used Node.js v22.16.0 on Linux x64, a 512-byte synthetic pay
 
 | Operation | Mean ms/op |
 |---|---:|
-| Baseline end-to-end encrypt + decrypt (local KEK) | 0.0619 |
-| Torn Note end-to-end encrypt + sign two shares + recover + decrypt | 1.1171 |
+| Baseline end-to-end encrypt + decrypt (local KEK) | 0.0538 |
+| Torn Note end-to-end encrypt + sign two shares + recover + decrypt | 1.0560 |
 
-In this run, the Torn Note path took about **18 times longer** than the local in-memory baseline. This is an early, machine-dependent microbenchmark, not a stable performance claim. The baseline is deliberately local; comparing it to a real remote KMS would require a separate, fair test with the same workload and explicit KMS configuration. Garbage collection and process-level heap deltas also make a single short run unsuitable for strong conclusions.
+In this run, the Torn Note path took about **20 times longer** than the local in-memory baseline. This is an early, machine-dependent microbenchmark, not a stable performance claim. The baseline is deliberately local; comparing it to a real remote KMS would require a separate, fair test with the same workload and explicit KMS configuration. Garbage collection and process-level heap deltas also make a single short run unsuitable for strong conclusions.
 
 The early result indicates a clear cost: the prototype adds share splitting, signatures, signature verification, and key reconstruction. Its potential value is therefore the threshold/recovery policy—not raw speed. We still need repeated runs and operational-failure testing before drawing a broader conclusion.
 
@@ -95,4 +95,4 @@ If the baseline already satisfies the intended threat model with simpler operati
 
 ## Current status
 
-A first implementation, targeted tests, benchmark harness, and CI workflow have been added on the experiment branch. The new identity-vault tests passed in a temporary local working copy, and a preliminary benchmark ran. A clean checkout, complete repository suite, confirmed CI run, repeated benchmark study, formal security analysis, and independent review remain outstanding. No production-security or production-performance claim is made.
+A first implementation, targeted tests, benchmark harness, and CI workflow have been added on the experiment branch. The eight new identity-vault tests passed in a temporary local working copy, and a preliminary benchmark ran. A clean checkout, complete repository suite, confirmed CI run, repeated benchmark study, formal security analysis, and independent review remain outstanding. No production-security or production-performance claim is made.
