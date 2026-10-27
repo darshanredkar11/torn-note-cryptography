@@ -56,3 +56,51 @@ test('duplicate presentations do not satisfy a threshold', () => {
   assert.equal(result.ok, false);
   assert.equal(result.admitted, 1);
 });
+
+test('AES-GCM rejects independently modified IV, ciphertext, and tag', () => {
+  for (const field of ['iv', 'ct', 'tag']) {
+    const fs = factors(2);
+    const original = boundEncrypt(Buffer.from([0, 1, 2, 127, 255]), { threshold: 2, factors: fs });
+    const changedEnvelope = { ...original.envelope };
+    const bytes = Buffer.from(changedEnvelope[field], 'base64');
+    bytes[0] ^= 0x01;
+    changedEnvelope[field] = bytes.toString('base64');
+    // Shares are validly signed for the changed envelope; GCM must still
+    // reject it because the envelope no longer matches the encrypted data.
+    const signed = original.shares.map((s, i) =>
+      signShare(s, fs[i].keypair.privateKey, { shareId: original.shareId, envelope: changedEnvelope }));
+    const result = boundDecrypt(signed, { ...original, envelope: changedEnvelope });
+    assert.equal(result.ok, false, field);
+  }
+});
+
+test('binary and empty plaintext round-trip without text conversion', () => {
+  for (const plaintext of [Buffer.alloc(0), Buffer.from([0, 10, 13, 128, 255])]) {
+    const fs = factors(2);
+    const e = boundEncrypt(plaintext, { threshold: 2, factors: fs });
+    const signed = e.shares.map((s, i) => signShare(s, fs[i].keypair.privateKey, e));
+    const result = boundDecrypt(signed, e);
+    assert.equal(result.ok, true);
+    assert.deepEqual(result.plaintext, plaintext);
+  }
+});
+
+test('malformed AES-GCM envelope is rejected', () => {
+  const fs = factors(2);
+  const e = boundEncrypt('secret', { threshold: 2, factors: fs });
+  const signed = e.shares.map((s, i) => signShare(s, fs[i].keypair.privateKey, e));
+  assert.throws(() => boundDecrypt(signed, { ...e, envelope: { ...e.envelope, iv: 'not-base64!' } }),
+    /invalid encryption envelope/);
+});
+
+test('P-256 enrolled factor signatures can authorize decryption', () => {
+  const fs = Array.from({ length: 2 }, () => ({
+    algo: 'p256',
+    keypair: crypto.generateKeyPairSync('ec', { namedCurve: 'prime256v1' })
+  }));
+  const e = boundEncrypt('p256 round trip', { threshold: 2, factors: fs });
+  const signed = e.shares.map((s, i) => signShare(s, fs[i].keypair.privateKey, e));
+  const result = boundDecrypt(signed, e);
+  assert.equal(result.ok, true);
+  assert.equal(result.plaintext.toString(), 'p256 round trip');
+});
