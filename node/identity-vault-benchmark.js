@@ -42,9 +42,18 @@ const tornPresentations = tornNotePresentations(tornRecord, factors, [0, 1]);
 const results = [
   measure('baseline.encrypt+wrap-DEK (local KEK)', () => baselineEncrypt(payload, kek)),
   measure('baseline.unwrap-DEK+decrypt (local KEK)', () => baselineDecrypt(baselineRecord, kek)),
+  measure('baseline.end-to-end encrypt+decrypt (local KEK)', () => {
+    const record = baselineEncrypt(payload, kek);
+    baselineDecrypt(record, kek);
+  }),
   measure('torn-note.encrypt+split+enroll', () => tornNoteEncrypt(payload, factors, 2)),
   measure('torn-note.sign-2-shares', () => tornNotePresentations(tornRecord, factors, [0, 1])),
-  measure('torn-note.verify+recover+decrypt', () => tornNoteDecrypt(tornRecord, tornPresentations))
+  measure('torn-note.verify+recover+decrypt', () => tornNoteDecrypt(tornRecord, tornPresentations)),
+  measure('torn-note.end-to-end encrypt+sign+recover+decrypt', () => {
+    const record = tornNoteEncrypt(payload, factors, 2);
+    const presentations = tornNotePresentations(record, factors, [0, 1]);
+    tornNoteDecrypt(record, presentations);
+  })
 ];
 
 console.log(JSON.stringify({
@@ -52,7 +61,6 @@ console.log(JSON.stringify({
   runtime: process.version,
   platform: process.platform,
   arch: process.arch,
-  cpuCount: crypto.constants ? undefined : undefined,
   payloadBytes: payload.length,
   threshold: '2-of-3',
   iterations,
