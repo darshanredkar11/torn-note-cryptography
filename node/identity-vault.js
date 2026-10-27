@@ -63,12 +63,18 @@ export function baselineDecrypt(record, kek) {
   }
 }
 
-/** Creates an in-memory Torn Note vault record for the research experiment. */
+/**
+ * Returns separate vault material and enrollment trust anchors.
+ * Persist enrollment outside the vault record, under an independently protected
+ * trust boundary. The in-memory demo does not provide durable storage itself.
+ */
 export function tornNoteEncrypt(plaintext, factors, threshold = 2) {
-  return boundEncrypt(Buffer.isBuffer(plaintext) ? plaintext : Buffer.from(plaintext), {
+  const result = boundEncrypt(Buffer.isBuffer(plaintext) ? plaintext : Buffer.from(plaintext), {
     threshold,
     factors
   });
+  const { factorRefs: enrollment, ...record } = result;
+  return { record, enrollment };
 }
 
 export function tornNotePresentations(record, factors, indices) {
@@ -80,8 +86,11 @@ export function tornNotePresentations(record, factors, indices) {
   });
 }
 
-export function tornNoteDecrypt(record, presentations) {
-  const result = boundDecrypt(presentations, record);
+export function tornNoteDecrypt(record, presentations, trustedEnrollment) {
+  if (!Array.isArray(trustedEnrollment)) {
+    throw new Error('separately trusted enrollment records are required');
+  }
+  const result = boundDecrypt(presentations, { ...record, factorRefs: trustedEnrollment });
   if (!result.ok) throw new Error(result.reason ?? 'Torn Note recovery failed');
   return result.plaintext;
 }
