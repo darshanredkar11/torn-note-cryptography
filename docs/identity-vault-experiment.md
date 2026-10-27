@@ -4,7 +4,7 @@
 
 Determine whether Torn Note's threshold recovery and enrolled-share authentication provide a measurable security or operational advantage for a small identity-data vault over a conventional envelope-encryption design.
 
-This is an experiment plan, not a security claim or production-readiness assessment.
+This is an experiment, not a security claim or production-readiness assessment.
 
 ## Scope
 
@@ -25,11 +25,11 @@ Encrypt the payload with AES-256-GCM. Never use real identity documents, product
 
 ## Designs under comparison
 
-### A. Baseline: envelope encryption
+### A. Baseline: local envelope-encryption reference
 
 - Encrypt the payload with a randomly generated data-encryption key (DEK) using AES-256-GCM.
-- Protect the DEK with a separately managed key-encryption key (KEK); for a production comparison, use a real KMS/HSM integration rather than pretending a local test key is equivalent to a managed service.
-- Document the KMS permissions and recovery assumptions.
+- Protect the DEK with a separate 256-bit AES-GCM key-encryption key (KEK).
+- The current baseline keeps the KEK in memory for repeatability. It is **not a cloud KMS/HSM integration** and does not model KMS access policies, network latency, availability, billing, or HSM protection.
 
 ### B. Torn Note prototype
 
@@ -45,31 +45,30 @@ Do not describe this as threshold signing: the prototype reconstructs a DEK. Do 
 
 Assume an attacker may obtain one share, alter or replay a share presentation, or modify the encrypted envelope. The experiment does not assume that all custodians are independent or uncompromisable. Explicitly document whether signing keys, enrollment references, and share storage are held in separate trust domains.
 
-## Test cases
+## Implemented test cases
 
 1. **Round trip:** correct payload encrypts and decrypts without changes.
 2. **Single-share insufficiency:** one share alone cannot recover the DEK.
 3. **Threshold recovery:** any permitted pair of valid shares recovers the original payload.
-4. **Share substitution:** a share from another envelope or enrollment is rejected.
-5. **Envelope tampering:** modified IV, ciphertext, or tag is rejected.
-6. **Signature tampering:** modified or invalidly signed share is rejected.
-7. **Replay/context mismatch:** a share presentation from a different context is rejected where the protocol binds that context.
-8. **Missing custodian:** recovery remains possible with any two valid shares when the third is unavailable.
-9. **Bad enrollment state:** unknown or revoked enrollment references are rejected if revocation is implemented; otherwise record this as an uncovered requirement.
-10. **Failure hygiene:** failures do not return plaintext or expose the reconstructed DEK in logs.
+4. **Share substitution/tampering:** modified share bytes fail signature verification.
+5. **Envelope tampering:** modified IV, ciphertext, or tag is rejected by the envelope-bound signing or AES-GCM authentication.
+6. **Wrong KEK:** the baseline rejects decryption with a wrong key.
+7. **Binary and empty payloads:** both approaches preserve byte content.
 
-## Measurements
+The new identity-vault test file passed locally: **7 passed, 0 failed** in a temporary working copy assembled from the current branch source files. This is not a clean Git checkout and does not establish that the entire repository test suite passes.
 
-Run both designs against the same payload sizes and machine/runtime. Warm up first, then repeat enough iterations to report median and p95 latency, throughput, and memory use. Record the environment and exact command used.
+## Preliminary local microbenchmark
 
-Measure separately:
-- encryption / key protection;
-- share creation and signing;
-- authorization and recovery;
-- end-to-end successful recovery;
-- rejection of invalid inputs.
+One exploratory run used Node.js v22.16.0 on Linux x64, a 512-byte synthetic payload, a 2-of-3 threshold, and 300 measured iterations per operation. Results below are mean milliseconds per operation from that run.
 
-Report operational costs too: number of services or custodians, key-management dependencies, recovery steps, and failure modes. Do not compare a local in-memory prototype against a remote KMS latency and present the result as a fair performance win.
+| Operation | Mean ms/op |
+|---|---:|
+| Baseline end-to-end encrypt + decrypt (local KEK) | 0.0619 |
+| Torn Note end-to-end encrypt + sign two shares + recover + decrypt | 1.1171 |
+
+In this run, the Torn Note path took about **18 times longer** than the local in-memory baseline. This is an early, machine-dependent microbenchmark, not a stable performance claim. The baseline is deliberately local; comparing it to a real remote KMS would require a separate, fair test with the same workload and explicit KMS configuration. Garbage collection and process-level heap deltas also make a single short run unsuitable for strong conclusions.
+
+The early result indicates a clear cost: the prototype adds share splitting, signatures, signature verification, and key reconstruction. Its potential value is therefore the threshold/recovery policy—not raw speed. We still need repeated runs and operational-failure testing before drawing a broader conclusion.
 
 ## Decision criteria
 
@@ -85,14 +84,15 @@ If the baseline already satisfies the intended threat model with simpler operati
 
 ## Reproducibility checklist
 
-- [ ] Run tests from a clean checkout of the experiment branch.
-- [ ] Record Node.js and dependency versions.
-- [ ] Use deterministic test fixtures only for tests; use cryptographically secure randomness for runtime keys and shares.
-- [ ] Run negative tests for every tamper case.
-- [ ] Repeat benchmark runs and publish raw results with the environment.
+- [ ] Run the complete repository test suite from a clean checkout of the experiment branch.
+- [x] Record Node.js version and execution environment for the preliminary run.
+- [x] Use cryptographically secure randomness for runtime keys and shares.
+- [x] Add positive and negative tests for baseline and threshold recovery.
+- [ ] Repeat benchmark runs and publish aggregated results with environment details.
+- [ ] Compare against an actual KMS/HSM only when the service and policy configuration can be documented.
 - [ ] Keep the prototype labelled experimental; do not use it to protect production identity data.
 - [ ] Obtain independent cryptographic review before any production use.
 
 ## Current status
 
-Plan only. No benchmark results are implied by this document. The prototype's existing unit-test results do not constitute a formal security proof or independent review.
+A first implementation, targeted tests, benchmark harness, and CI workflow have been added on the experiment branch. The new identity-vault tests passed in a temporary local working copy, and a preliminary benchmark ran. A clean checkout, complete repository suite, confirmed CI run, repeated benchmark study, formal security analysis, and independent review remain outstanding. No production-security or production-performance claim is made.
