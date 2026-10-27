@@ -18,7 +18,19 @@ function digestFor(shareId, share, ciphertextHash) {
     sha256(y), ciphertextHash);
 }
 function cipherHash(envelope) {
-  return sha256(Buffer.from(envelope.ct, 'base64'), Buffer.from(envelope.tag, 'base64'));
+  // Bind the complete AES-GCM envelope. The IV is security-relevant and must
+  // not be replaceable independently of the signed shares.
+  if (!envelope || typeof envelope.iv !== 'string' ||
+      typeof envelope.ct !== 'string' || typeof envelope.tag !== 'string')
+    throw new Error('invalid encryption envelope');
+  const iv = Buffer.from(envelope.iv, 'base64');
+  const ct = Buffer.from(envelope.ct, 'base64');
+  const tag = Buffer.from(envelope.tag, 'base64');
+  if (iv.length !== 12 || iv.toString('base64') !== envelope.iv ||
+      ct.toString('base64') !== envelope.ct ||
+      tag.length !== 16 || tag.toString('base64') !== envelope.tag)
+    throw new Error('invalid encryption envelope');
+  return sha256(CONTEXT, iv, ct, tag);
 }
 
 // Enrollment must persist factorRefs in a trusted registry separately from
