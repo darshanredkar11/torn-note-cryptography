@@ -1,0 +1,29 @@
+name: Node.js tests
+
+on:
+  push:
+    branches:
+      - main
+      - "experiment/**"
+      - "security/**"
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run Node test suite
+        working-directory: node
+        run: npm test
+      - name: Run identity vault benchmark smoke test
+        working-directory: node
+        env:
+          BENCH_ITERATIONS: 10
+        run: npm run benchmark:identity-vault
