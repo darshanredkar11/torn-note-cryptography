@@ -5,16 +5,20 @@ import {
 } from './identity-vault.js';
 
 const iterations = Number.parseInt(process.env.BENCH_ITERATIONS ?? '300', 10);
-const payloadBytes = Number.parseInt(process.env.BENCH_PAYLOAD_BYTES ?? '512', 10);
-if (!Number.isInteger(iterations) || iterations < 1 || !Number.isInteger(payloadBytes) || payloadBytes < 0) {
+const requestedPayloadBytes = Number.parseInt(process.env.BENCH_PAYLOAD_BYTES ?? '512', 10);
+if (!Number.isInteger(iterations) || iterations < 1 ||
+    !Number.isInteger(requestedPayloadBytes) || requestedPayloadBytes < 0) {
   throw new Error('BENCH_ITERATIONS must be >= 1 and BENCH_PAYLOAD_BYTES must be >= 0');
 }
 
-const payload = Buffer.from(JSON.stringify({
+const prefix = JSON.stringify({
   subjectId: 'test-subject-001',
   credentialType: 'ExampleCredential',
-  testOnlyPayload: 'x'.repeat(Math.max(0, payloadBytes - 100))
-}));
+  testOnlyPayload: ''
+}).slice(0, -2);
+const minimumPayloadBytes = Buffer.byteLength(prefix) + 2;
+const payloadBytes = Math.max(requestedPayloadBytes, minimumPayloadBytes);
+const payload = Buffer.from(prefix + 'x'.repeat(payloadBytes - minimumPayloadBytes) + '"}');
 const kek = crypto.randomBytes(32);
 const factors = createEd25519Factors(3);
 
@@ -61,7 +65,8 @@ console.log(JSON.stringify({
   runtime: process.version,
   platform: process.platform,
   arch: process.arch,
-  payloadBytes: payload.length,
+  requestedPayloadBytes,
+  actualPayloadBytes: payload.length,
   threshold: '2-of-3',
   iterations,
   results
