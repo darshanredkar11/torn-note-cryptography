@@ -40,7 +40,7 @@ function measure(name, fn) {
 }
 
 const baselineRecord = baselineEncrypt(payload, kek);
-const tornRecord = tornNoteEncrypt(payload, factors, 2);
+const { record: tornRecord, enrollment } = tornNoteEncrypt(payload, factors, 2);
 const tornPresentations = tornNotePresentations(tornRecord, factors, [0, 1]);
 
 const results = [
@@ -52,11 +52,11 @@ const results = [
   }),
   measure('torn-note.encrypt+split+enroll', () => tornNoteEncrypt(payload, factors, 2)),
   measure('torn-note.sign-2-shares', () => tornNotePresentations(tornRecord, factors, [0, 1])),
-  measure('torn-note.verify+recover+decrypt', () => tornNoteDecrypt(tornRecord, tornPresentations)),
+  measure('torn-note.verify+recover+decrypt', () => tornNoteDecrypt(tornRecord, tornPresentations, enrollment)),
   measure('torn-note.end-to-end encrypt+sign+recover+decrypt', () => {
-    const record = tornNoteEncrypt(payload, factors, 2);
+    const { record, enrollment: trustedEnrollment } = tornNoteEncrypt(payload, factors, 2);
     const presentations = tornNotePresentations(record, factors, [0, 1]);
-    tornNoteDecrypt(record, presentations);
+    tornNoteDecrypt(record, presentations, trustedEnrollment);
   })
 ];
 
