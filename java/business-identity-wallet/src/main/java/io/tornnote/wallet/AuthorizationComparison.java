@@ -53,18 +53,18 @@ final class AuthorizationComparison {
      */
     static final class ConventionalVerifier {
         private final List<PublicKey> signers;
-        private final Set<String> consumedRequestIds = new HashSet<>();
+        private final Set<String> consumedTransactions = new HashSet<>();
 
         ConventionalVerifier(List<PublicKey> signers) { this.signers = List.copyOf(signers); }
 
-        synchronized boolean verifyAndConsume(String requestId, String tx, List<byte[]> signatures)
+        synchronized boolean verifyAndConsume(String tx, List<byte[]> signatures)
                 throws GeneralSecurityException {
-            if (requestId == null || consumedRequestIds.contains(requestId)
+            if (tx == null || consumedTransactions.contains(tx)
                     || signatures == null || signatures.size() != signers.size()) return false;
             for (int i = 0; i < signers.size(); i++) {
                 if (!verify(signers.get(i), tx, signatures.get(i))) return false;
             }
-            consumedRequestIds.add(requestId);
+            consumedTransactions.add(tx);
             return true;
         }
     }
