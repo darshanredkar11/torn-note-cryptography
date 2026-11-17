@@ -19,9 +19,9 @@ class AuthorizationComparisonTest {
         var multi = new AuthorizationComparison.ConventionalVerifier(
                 f.allSignerKeys().stream().map(KeyPair::getPublic).toList());
 
-        assertTrue(single.verifyAndConsume("single-REQ-1", TX,
+        assertTrue(single.verifyAndConsume(TX,
                 AuthorizationComparison.signAll(List.of(f.master.pair()), TX)));
-        assertTrue(multi.verifyAndConsume("multi-REQ-1", TX,
+        assertTrue(multi.verifyAndConsume(TX,
                 AuthorizationComparison.signAll(f.allSignerKeys(), TX)));
         var note = f.authorize(TX, true, true, true);
         assertTrue(f.verify(TX, note, false));
@@ -34,11 +34,11 @@ class AuthorizationComparisonTest {
                 f.allSignerKeys().stream().map(KeyPair::getPublic).toList());
 
         // Attacker has the employee's sole signing key.
-        assertTrue(single.verifyAndConsume("single-stolen-master", TX,
+        assertTrue(single.verifyAndConsume(TX,
                 List.of(AuthorizationComparison.sign(f.master.pair(), TX))));
 
         // The same stolen key cannot provide signatures from the two enrolled fragments.
-        assertFalse(multi.verifyAndConsume("multi-stolen-master", TX,
+        assertFalse(multi.verifyAndConsume(TX,
                 List.of(AuthorizationComparison.sign(f.master.pair(), TX))));
         TornNote.SignatureSet masterOnly = f.authorize(TX, true, false, false);
         assertFalse(f.verify(TX, masterOnly, false));
@@ -48,7 +48,7 @@ class AuthorizationComparisonTest {
         var f = new AuthorizationComparison.TornFixture();
         var multi = new AuthorizationComparison.ConventionalVerifier(
                 f.allSignerKeys().stream().map(KeyPair::getPublic).toList());
-        assertFalse(multi.verifyAndConsume("multi-one-factor", TX,
+        assertFalse(multi.verifyAndConsume(TX,
                 List.of(AuthorizationComparison.sign(f.master.pair(), TX))));
         assertFalse(f.verify(TX, f.authorize(TX, true, false, false), false));
     }
@@ -68,10 +68,10 @@ class AuthorizationComparisonTest {
         var tornSig = f.authorize(TX, true, true, true);
 
         assertFalse(new AuthorizationComparison.ConventionalVerifier(List.of(f.master.pair().getPublic()))
-                .verifyAndConsume("single-tamper", changed, List.of(singleSig)));
+                .verifyAndConsume(changed, List.of(singleSig)));
         assertFalse(new AuthorizationComparison.ConventionalVerifier(
                 f.allSignerKeys().stream().map(KeyPair::getPublic).toList())
-                .verifyAndConsume("multi-tamper", changed, multiSigs));
+                .verifyAndConsume(changed, multiSigs));
         assertFalse(f.verify(changed, tornSig, false));
     }
 
@@ -79,14 +79,14 @@ class AuthorizationComparisonTest {
         var f = new AuthorizationComparison.TornFixture();
         var single = new AuthorizationComparison.ConventionalVerifier(List.of(f.master.pair().getPublic()));
         byte[] singleSig = AuthorizationComparison.sign(f.master.pair(), TX);
-        assertTrue(single.verifyAndConsume("single-replay", TX, List.of(singleSig)));
-        assertFalse(single.verifyAndConsume("single-replay", TX, List.of(singleSig)));
+        assertTrue(single.verifyAndConsume(TX, List.of(singleSig)));
+        assertFalse(single.verifyAndConsume(TX, List.of(singleSig)));
 
         var multi = new AuthorizationComparison.ConventionalVerifier(
                 f.allSignerKeys().stream().map(KeyPair::getPublic).toList());
         var multiSig = AuthorizationComparison.signAll(f.allSignerKeys(), TX);
-        assertTrue(multi.verifyAndConsume("multi-replay", TX, multiSig));
-        assertFalse(multi.verifyAndConsume("multi-replay", TX, multiSig));
+        assertTrue(multi.verifyAndConsume(TX, multiSig));
+        assertFalse(multi.verifyAndConsume(TX, multiSig));
 
         var note = f.authorize(TX, true, true, true);
         assertTrue(f.verify(TX, note, false));
@@ -104,7 +104,7 @@ class AuthorizationComparisonTest {
         var multi = new AuthorizationComparison.ConventionalVerifier(
                 f.allSignerKeys().stream().map(KeyPair::getPublic).toList());
         String fabricated = TX.replace("REQ-1001", "UNISSUED-NOTE-ATTEMPT");
-        assertTrue(multi.verifyAndConsume("multi-unissued", fabricated,
+        assertTrue(multi.verifyAndConsume(fabricated,
                 AuthorizationComparison.signAll(f.allSignerKeys(), fabricated)));
 
         // Torn Note rejects the forged leaf against the issuer-pinned root.
