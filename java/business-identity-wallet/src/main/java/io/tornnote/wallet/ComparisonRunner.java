@@ -95,7 +95,7 @@ public final class ComparisonRunner {
 
     private static String tx(int i) {
         return "{\"operation\":\"CHANGE_SUPPLIER_BANK_ACCOUNT\",\"supplier\":\"ACME\","
-                + "\"authorizationNoteId\":\"wallet-note-3\",\"account\":\"XX-4821\",\"amount\":850000,\"currency\":\"INR\",
+                + "\"authorizationNoteId\":\"wallet-note-3\",\"account\":\"XX-4821\",\"amount\":850000,\"currency\":\"INR\","
                 + "\"requestId\":\"BENCH-" + i + "\"}";
     }
 }
