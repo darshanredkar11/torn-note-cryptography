@@ -4,8 +4,9 @@
   "description": "Offline-first torn-note authorization research prototype",
   "type": "module",
   "scripts": {
-    "test": "node --test index.test.js shamir.test.js bound-shamir.test.js ../zk/reference.test.js",
-    "benchmark": "node benchmark.js"
+    "test": "node --test index.test.js shamir.test.js bound-shamir.test.js identity-vault.test.js ../zk/reference.test.js",
+    "benchmark": "node benchmark.js",
+    "benchmark:identity-vault": "node identity-vault-benchmark.js"
   },
   "engines": { "node": ">=20" },
   "license": "Apache-2.0"

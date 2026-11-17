@@ -83,16 +83,21 @@ Also report disadvantages: additional coordination, enrollment and revocation co
 
 If the baseline already satisfies the intended threat model with simpler operations, record that honestly. Do not claim the prototype is more secure overall based only on passing tests.
 
-## Reproducibility checklist
+## Reproducibility and validation status
 
-- [ ] Run tests from a clean checkout of the experiment branch.
-- [ ] Record Node.js and dependency versions.
-- [ ] Use deterministic test fixtures only for tests; use cryptographically secure randomness for runtime keys and shares.
-- [ ] Run negative tests for every tamper case.
-- [ ] Repeat benchmark runs and publish raw results with the environment.
-- [ ] Keep the prototype labelled experimental; do not use it to protect production identity data.
+- [x] Run the repository Node test suite from a clean GitHub Actions checkout.
+- [x] Record the CI runtime: Node.js v22.23.4, Linux x64.
+- [x] Use cryptographically secure randomness for runtime keys and shares.
+- [x] Cover positive and negative cases for round trips, insufficient shares, enrollment substitution, share tampering, envelope tampering, binary payloads, and empty payloads.
+- [x] Run the identity-vault benchmark smoke test from CI with a 512-byte synthetic payload and 10 measured iterations.
+- [ ] Repeat benchmark runs with enough iterations to report stable median and p95 results.
+- [ ] Compare against an actual KMS/HSM only when the service and policy configuration can be documented.
 - [ ] Obtain independent cryptographic review before any production use.
 
-## Current status
+The clean-checkout Node workflow passed **36 tests, 0 failures**. This includes the identity-vault test cases. The CI benchmark smoke run completed successfully, but its 10 iterations are only a wiring/sanity check; the timings are not suitable for a performance conclusion. The benchmark's local in-memory KEK is not equivalent to a cloud KMS/HSM.
 
-Plan only. No benchmark results are implied by this document. The prototype's existing unit-test results do not constitute a formal security proof or independent review.
+## Current implementation status
+
+The reference implementation, eight focused identity-vault tests, and configurable benchmark harness are now present. The Node CI workflow also runs the benchmark smoke test. The implementation separates the vault record from enrollment trust references at the API boundary, but the demo does not provide durable, independently protected enrollment storage.
+
+This remains a research prototype. It does not establish that Torn Note is more secure or faster than a properly configured envelope-encryption system, does not implement threshold signing or FROST, and must not be used to protect production identity data. Formal analysis, independent review, durable enrollment storage, revocation, operational recovery testing, and repeated benchmark runs remain outstanding.
