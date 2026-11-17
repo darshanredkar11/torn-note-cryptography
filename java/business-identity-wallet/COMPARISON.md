@@ -53,15 +53,15 @@ Measured on GitHub Actions on 17 November 2026 with OpenJDK 21.0.13. The runner 
 
 | Model | Median mean signing + verification |
 |---|---:|
-| Single-key Ed25519 | 803.93 µs/op |
-| Conventional 3-of-3 Ed25519 | 2,414.12 µs/op |
-| Torn Note 3-of-3 | 2,392.58 µs/op |
+| Single-key Ed25519 | 1,290.05 µs/op |
+| Conventional 3-of-3 Ed25519 | 3,846.60 µs/op |
+| Torn Note 3-of-3 | 3,859.90 µs/op |
 
-Torn Note measured about **0.9% lower** than the conventional 3-of-3 path in this single CI sample. That difference is too small to call a performance advantage; treat it as measurement noise. Both three-signature paths are approximately three times the single-signature baseline. Torn Note performs Merkle membership checks in addition to the same three signatures, but the extra work did not create a measurable penalty in this micro-benchmark.
+Torn Note measured about **0.35% higher** latency than the conventional 3-of-3 path in this CI sample. That difference is too small to call a performance disadvantage or advantage; treat it as measurement noise. Both three-signature paths are approximately three times the single-signature baseline. Torn Note performs Merkle membership checks in addition to the same three signatures, and this sample did not show a material additional latency cost.
 
 This is a micro-benchmark, not a statistically rigorous performance study or enterprise capacity test. It excludes key generation, HTTP/database/network costs, durable storage, HSMs, employee identity proofing, and multi-process concurrency.
 
-CI run: https://github.com/darshanredkar11/torn-note-cryptography/actions/runs/44100619625
+CI run: https://github.com/darshanredkar11/torn-note-cryptography/actions/runs/44105928645
 
 ## Scope and caveats
 
