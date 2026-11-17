@@ -49,17 +49,19 @@ The micro-benchmark excludes key generation, network, database transactions, dur
 
 ## Live CI sample
 
-Measured on GitHub Actions on 17 November 2026 with OpenJDK 21.0.13. The runner used three rounds, 1,000 measured operations per round and 150 warm-up operations per round, with the implementation order rotated between rounds.
+Measured on GitHub Actions on 17 November 2026 with OpenJDK 21.0.13. The runner used three rounds, 1,000 measured operations per round and 150 warm-up operations per round, with implementation order rotated between rounds. The transaction in all three paths includes the same supplier, amount, beneficiary account, currency, request ID, and authorization-note identifier.
 
 | Model | Median mean signing + verification |
 |---|---:|
-| Single-key Ed25519 | 766.45 µs/op |
-| Conventional 3-of-3 Ed25519 | 2,279.15 µs/op |
-| Torn Note 3-of-3 | 2,277.82 µs/op |
+| Single-key Ed25519 | 803.93 µs/op |
+| Conventional 3-of-3 Ed25519 | 2,414.12 µs/op |
+| Torn Note 3-of-3 | 2,392.58 µs/op |
 
-The Torn Note and conventional 3-of-3 numbers differ by about **0.06%**, which is not a meaningful performance advantage and should be treated as measurement noise. Both three-signature approaches took roughly three times the single-signature baseline. Torn Note adds Merkle inventory checks without showing a material latency penalty in this particular sample, but this is not a claim that it is faster.
+Torn Note measured about **0.9% lower** than the conventional 3-of-3 path in this single CI sample. That difference is too small to call a performance advantage; treat it as measurement noise. Both three-signature paths are approximately three times the single-signature baseline. Torn Note performs Merkle membership checks in addition to the same three signatures, but the extra work did not create a measurable penalty in this micro-benchmark.
 
-CI run: https://github.com/darshanredkar11/torn-note-cryptography/actions/runs/44099708716
+This is a micro-benchmark, not a statistically rigorous performance study or enterprise capacity test. It excludes key generation, HTTP/database/network costs, durable storage, HSMs, employee identity proofing, and multi-process concurrency.
+
+CI run: https://github.com/darshanredkar11/torn-note-cryptography/actions/runs/44100619625
 
 ## Scope and caveats
 
