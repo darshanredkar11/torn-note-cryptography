@@ -4,10 +4,13 @@ import io.tornnote.TornNote;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-/** Same-machine micro-benchmark. Run with :business-identity-wallet:compare. */
+/** Same-machine micro-benchmark; rotates implementation order and reports the median of three rounds. */
 public final class ComparisonRunner {
+    private static final int ROUNDS = 3;
+    private static final int WARMUP = 150;
     private ComparisonRunner() {}
 
     public static void main(String[] args) throws Exception {
@@ -17,22 +20,42 @@ public final class ComparisonRunner {
         var signers = f.allSignerKeys();
         var singlePublic = f.master.pair().getPublic();
         var multiPublic = signers.stream().map(KeyPair::getPublic).toList();
+        double[] single = new double[ROUNDS], multi = new double[ROUNDS], torn = new double[ROUNDS];
+
+        for (int round = 0; round < ROUNDS; round++) {
+            // Rotate order to reduce systematic warm-up/order bias.
+            switch (round) {
+                case 0 -> {
+                    single[round] = measure(WARMUP, iterations, i -> single(singlePublic, f.master.pair(), i));
+                    multi[round] = measure(WARMUP, iterations, i -> multi(multiPublic, signers, i));
+                    torn[round] = measure(WARMUP, iterations, i -> torn(f, i));
+                }
+                case 1 -> {
+                    torn[round] = measure(WARMUP, iterations, i -> torn(f, i));
+                    single[round] = measure(WARMUP, iterations, i -> single(singlePublic, f.master.pair(), i));
+                    multi[round] = measure(WARMUP, iterations, i -> multi(multiPublic, signers, i));
+                }
+                default -> {
+                    multi[round] = measure(WARMUP, iterations, i -> multi(multiPublic, signers, i));
+                    torn[round] = measure(WARMUP, iterations, i -> torn(f, i));
+                    single[round] = measure(WARMUP, iterations, i -> single(singlePublic, f.master.pair(), i));
+                }
+            }
+        }
 
         System.out.println("Torn Note / conventional authorization comparison");
         System.out.println("Environment: " + System.getProperty("java.vm.name") + " " + System.getProperty("java.version"));
-        System.out.println("Iterations: " + iterations + " (100 warm-up iterations)");
+        System.out.println("Rounds: " + ROUNDS + " · iterations/round: " + iterations + " · warm-up/round: " + WARMUP);
         System.out.println();
-        System.out.println("| Model | Signing + verification (mean µs/op) | Signature count | Extra authorization state |");
+        System.out.println("| Model | Median mean µs/op | Signature count | Extra authorization state |");
         System.out.println("|---|---:|---:|---|");
-        System.out.printf("| Single-key Ed25519 | %.2f | 1 | Transaction nonce / replay store |%n",
-                measure(100, iterations, i -> single(singlePublic, f.master.pair(), i)));
-        System.out.printf("| Conventional 3-of-3 Ed25519 | %.2f | 3 | Signer policy + transaction nonce / replay store |%n",
-                measure(100, iterations, i -> multi(multiPublic, signers, i)));
-        System.out.printf("| Torn Note 3-of-3 | %.2f | 3 | Pre-issued Merkle inventory + spent-note state |%n",
-                measure(100, iterations, i -> torn(f, i)));
+        System.out.printf("| Single-key Ed25519 | %.2f | 1 | Transaction nonce / replay store |%n", median(single));
+        System.out.printf("| Conventional 3-of-3 Ed25519 | %.2f | 3 | Signer policy + transaction nonce / replay store |%n", median(multi));
+        System.out.printf("| Torn Note 3-of-3 | %.2f | 3 | Pre-issued Merkle inventory + spent-note state |%n", median(torn));
         System.out.println();
-        System.out.println("Note: micro-benchmark only. It excludes key generation, HTTP/database/network costs, durable storage and hardware security modules.");
-        System.out.println("Single-key vs Torn Note changes the authorization policy. Conventional 3-of-3 multisignature is the closer cryptographic control.");
+        System.out.println("Each operation signs and verifies one transaction. Torn Note also checks Merkle membership before signing and during verification.");
+        System.out.println("Micro-benchmark only: excludes key generation, HTTP/database/network costs, durable storage, HSMs and identity proofing.");
+        System.out.println("Conventional 3-of-3 is the closer cryptographic control; this benchmark does not establish a security superiority.");
     }
 
     @FunctionalInterface private interface Operation { void run(int i) throws Exception; }
@@ -42,6 +65,12 @@ public final class ComparisonRunner {
         long start = System.nanoTime();
         for (int i = 0; i < iterations; i++) op.run(i + warmup);
         return (System.nanoTime() - start) / 1000.0 / iterations;
+    }
+
+    private static double median(double[] values) {
+        double[] sorted = values.clone();
+        Arrays.sort(sorted);
+        return sorted[sorted.length / 2];
     }
 
     private static void single(PublicKey pub, KeyPair key, int i) throws Exception {
