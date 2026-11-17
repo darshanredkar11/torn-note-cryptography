@@ -53,6 +53,13 @@ class AuthorizationComparisonTest {
         assertFalse(f.verify(TX, f.authorize(TX, true, false, false), false));
     }
 
+    @Test void anyMissingTornNoteFactorCausesRejection() throws Exception {
+        var f = new AuthorizationComparison.TornFixture();
+        assertFalse(f.verify(TX, f.authorize(TX, true, true, false), false));
+        assertFalse(f.verify(TX, f.authorize(TX, true, false, true), false));
+        assertFalse(f.verify(TX, f.authorize(TX, false, true, true), false));
+    }
+
     @Test void transactionTamperingIsRejectedByAllModels() throws Exception {
         var f = new AuthorizationComparison.TornFixture();
         String changed = TX.replace("XX-4821", "XX-9999");
