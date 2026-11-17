@@ -2,10 +2,11 @@
 
 Runnable business scenario: a finance controller uses a company-issued wallet to authorize a supplier bank-account change.
 
-The verifier requires the employee identity key, both fragments of a pre-issued note, membership in the committed inventory, signatures over the exact canonical transaction, and an unspent note. The browser demo includes a stolen-master-only attempt, transaction tampering, a legitimate authorization and replay attempt.
+The verifier requires the employee identity key, both fragments of a pre-issued note, membership in the committed inventory, signatures over the exact canonical transaction, and an unspent note.
+
+**Start here:** [Why Torn Note? Business security model, factor storage, Ed25519 comparison and production gaps](docs/WHY_TORN_NOTE.md).
 
 ## Run
-
 Requirements: JDK 21 and Gradle 8+. From this directory run:
 
     gradle run
@@ -14,7 +15,7 @@ Open http://localhost:8080.
 
 ## Compiled library integration
 
-The application declares implementation project(':'). Gradle builds the parent Java module as its JAR and places that compiled artifact on this application's classpath. Torn Note cryptographic operations are called through io.tornnote.TornNote; the use case does not copy the cryptographic implementation.
+The application declares `implementation project(':')`. Gradle builds the parent Java module as its JAR and places it on this application's classpath. Torn Note cryptographic operations are called through `io.tornnote.TornNote`; the use case does not copy the cryptographic implementation.
 
 ## Issuer / wallet / verifier separation
 
@@ -25,7 +26,7 @@ The role-separated Java reference components are:
 - `AuthorizationVerifier`: receives a separately pinned issuer public key, the signed manifest, public note data, identity public key, exact transaction and signatures. It does not receive issuer or wallet fragment private keys.
 - `SpendStore`: requires an atomic insert-if-absent operation. The included concurrent-map implementation is a test adapter; a production implementation should use a durable database unique constraint on inventory ID + note ID.
 
-The tests run the issuer and verifier as separate object roles and exercise manifest tampering, an untrusted issuer key, fabricated note data, a successful authorization, replay, and 12 concurrent attempts to consume the same note (exactly one may succeed).
+The tests exercise manifest tampering, an untrusted issuer key, fabricated note data, replay, and concurrent attempts to spend the same note.
 
 The current web demo has not yet been refactored to deploy these roles as separate network services or operating-system processes. The role split is a Java reference implementation and test boundary, not a production deployment boundary. The issuer public key must be provisioned to verifiers out of band; accepting a key supplied by the manifest itself would defeat issuer authentication.
 
