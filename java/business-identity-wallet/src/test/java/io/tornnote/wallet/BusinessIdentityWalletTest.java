@@ -27,7 +27,7 @@ class BusinessIdentityWalletTest {
         byte[] id="supplier-change-002".getBytes(StandardCharsets.UTF_8);
         byte[] leaf=TornNote.leaf(id,TornNote.pub(a.pair()),TornNote.pub(b.pair()));
         List<byte[]> leaves=List.of(leaf); byte[] root=TornNote.root(leaves); var proof=TornNote.proof(leaves,0);
-        String tx="{\\"account\\":\\"XX-4821\\",\\"amount\\":850000}";
+        String tx="account=XX-4821;amount=850000";
         var masterOnly=TornNote.authorizeAvailable(master,a,b,root,id,TornNote.pub(a.pair()),TornNote.pub(b.pair()),
                 tx,proof,0,true,false,false);
         assertFalse(TornNote.verifyAuthorization(master.pair().getPublic(),a.pair().getPublic(),b.pair().getPublic(),
