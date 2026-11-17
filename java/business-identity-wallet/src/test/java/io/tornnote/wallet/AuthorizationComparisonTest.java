@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class AuthorizationComparisonTest {
     private static final String TX =
             "{\"operation\":\"CHANGE_SUPPLIER_BANK_ACCOUNT\",\"supplier\":\"ACME\","
-            + "\"account\":\"XX-4821\",\"amount\":850000,\"currency\":\"INR\","
+            + "\"authorizationNoteId\":\"wallet-note-3\",\"account\":\"XX-4821\",\"amount\":850000,\"currency\":\"INR\",
             + "\"requestId\":\"REQ-1001\"}";
 
     @Test void legitimateOperationWorksAcrossAllThreeModels() throws Exception {
@@ -103,7 +103,7 @@ class AuthorizationComparisonTest {
         // built-in pre-issued note inventory requirement.
         var multi = new AuthorizationComparison.ConventionalVerifier(
                 f.allSignerKeys().stream().map(KeyPair::getPublic).toList());
-        String fabricated = TX.replace("REQ-1001", "UNISSUED-NOTE-ATTEMPT");
+        String fabricated = TX.replace("wallet-note-3", "not-issued-by-company");
         assertTrue(multi.verifyAndConsume(fabricated,
                 AuthorizationComparison.signAll(f.allSignerKeys(), fabricated)));
 
