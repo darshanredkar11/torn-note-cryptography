@@ -1,0 +1,53 @@
+name: Business Identity Wallet
+
+on:
+  push:
+    branches: [main, use-case/business-identity-wallet]
+    paths:
+      - 'java/**'
+      - '.github/workflows/business-identity-wallet.yml'
+  pull_request:
+    paths:
+      - 'java/**'
+      - '.github/workflows/business-identity-wallet.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10'
+      - name: Build library and business wallet
+        run: gradle -p java clean test :business-identity-wallet:test :business-identity-wallet:installDist :business-identity-wallet:compare -Piterations=1000
+
+      - name: Live HTTP smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP="java/business-identity-wallet/build/install/business-identity-wallet/bin/business-identity-wallet"
+          PORT=18080 "$APP" >/tmp/torn-note-wallet.log 2>&1 &
+          PID=$!
+          trap 'kill "$PID" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:18080/api/status >/tmp/wallet-status.json; then break; fi
+            sleep 1
+          done
+          grep -q '"noteCount":8' /tmp/wallet-status.json
+          curl -fsS -X POST http://127.0.0.1:18080/api/authorize -H 'Content-Type: application/json' -d '{"mode":"master-only"}' >/tmp/master-only.json
+          curl -fsS -X POST http://127.0.0.1:18080/api/execute -H 'Content-Type: application/json' -d '{"tamper":false}' >/tmp/master-only-result.json
+          grep -q '"decision":"REJECTED"' /tmp/master-only-result.json
+          curl -fsS -X POST http://127.0.0.1:18080/api/authorize -H 'Content-Type: application/json' -d '{"mode":"legitimate"}' >/tmp/legitimate.json
+          curl -fsS -X POST http://127.0.0.1:18080/api/execute -H 'Content-Type: application/json' -d '{"tamper":false}' >/tmp/legitimate-result.json
+          grep -q '"decision":"ACCEPTED"' /tmp/legitimate-result.json
+          curl -fsS -X POST http://127.0.0.1:18080/api/execute -H 'Content-Type: application/json' -d '{"tamper":false}' >/tmp/replay-result.json
+          grep -q '"decision":"REJECTED"' /tmp/replay-result.json
+          curl -fsS -X POST http://127.0.0.1:18080/api/authorize -H 'Content-Type: application/json' -d '{"mode":"legitimate"}' >/tmp/tamper-authorization.json
+          curl -fsS -X POST http://127.0.0.1:18080/api/execute -H 'Content-Type: application/json' -d '{"tamper":true}' >/tmp/tamper-result.json
+          grep -q '"decision":"REJECTED"' /tmp/tamper-result.json
+          echo "HTTP smoke test passed: stolen-master rejected, legitimate operation accepted, replay rejected, tampered transaction rejected."

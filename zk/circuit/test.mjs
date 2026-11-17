@@ -22,7 +22,7 @@ function hash(inputs) {
 
 function point(s) {
   const p = babyjub.mulPointEscalar(babyjub.Base8, scalar(s));
-  return [BigInt(p[0].toString()), BigInt(p[1].toString())];
+  return [BigInt(babyjub.F.toObject(p[0]).toString()), BigInt(babyjub.F.toObject(p[1]).toString())];
 }
 
 const SUBORDER = BigInt(babyjub.subOrder.toString());
@@ -103,6 +103,10 @@ function assertRejected(input, name) {
 }
 
 if (!existsSync(WASM)) throw new Error("Circuit not compiled: " + WASM);
+
+// Circom emits CommonJS witness scripts. Keep the generated folder CommonJS
+// even though the surrounding circuit package uses ESM for this test runner.
+writeFileSync(path.join(BUILD, "TornNote_js", "package.json"), JSON.stringify({ type: "commonjs" }));
 
 // Build a deterministic 256-note inventory so the Merkle path has depth 8.
 const notes = Array.from({ length: 256 }, (_, i) => note(i));
@@ -190,7 +194,7 @@ console.log(JSON.stringify({
   status: "PASS",
   circuit: "TornNote/v0.3",
   depth: 8,
-  positiveWitnesses: 8,
+  positiveWitnesses: 256,
   adversarialWitnessesRejected: 12,
   differentialVectors: 10000,
   attacks: [

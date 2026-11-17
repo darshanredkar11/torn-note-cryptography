@@ -1,0 +1,23 @@
+plugins { id 'application' }
+
+repositories { mavenCentral() }
+
+dependencies {
+    implementation project(':')
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.3'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.3'
+}
+
+application { mainClass = 'io.tornnote.wallet.BusinessIdentityWallet' }
+
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+test { useJUnitPlatform() }
+
+tasks.register('compare', JavaExec) {
+    group = 'verification'
+    description = 'Runs the conventional-vs-Torn-Note security and performance comparison.'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'io.tornnote.wallet.ComparisonRunner'
+    args(providers.gradleProperty('iterations').orElse('1500').get())
+}

@@ -54,5 +54,8 @@ jobs:
       - name: Install Circomspect
         run: cargo install circomspect --locked
 
+      - name: Install circuit dependencies
+        run: npm install
+
       - name: Static circuit analysis
         run: circomspect TornNote.circom --level WARNING
