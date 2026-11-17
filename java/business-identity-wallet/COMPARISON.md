@@ -40,12 +40,12 @@ Run:
 
     gradle :business-identity-wallet:compare
 
-The runner measures mean signing-plus-verification time on the same machine after warm-up for:
+The runner performs three rounds with rotated execution order, then reports the median of the per-round mean signing-plus-verification times for:
 - one Ed25519 signature;
 - three conventional Ed25519 signatures;
 - Torn Note issuance-membership check + three signatures + verification membership check + three signature verifications.
 
-The micro-benchmark excludes key generation, network, database transactions, durable storage, HSMs and real identity proofing. Results are machine-dependent and are not an enterprise capacity benchmark.
+The micro-benchmark excludes key generation, network, database transactions, durable storage, HSMs and real identity proofing. Results are machine-dependent and are not an enterprise capacity benchmark. It is a smoke-level comparison, not a statistically rigorous performance study.
 
 ## Scope and caveats
 
