@@ -4,7 +4,8 @@ Runnable business scenario: a finance controller uses a company-issued wallet to
 
 The verifier requires the employee identity key, both fragments of a pre-issued note, membership in the committed inventory, signatures over the exact canonical transaction, and an unspent note.
 
-**Start here:** [Why Torn Note? Business security model, factor storage, Ed25519 comparison and production gaps](docs/WHY_TORN_NOTE.md).
+**Start here:** [Why Torn Note? Business security model, factor storage, Ed25519 comparison and production gaps](docs/WHY_TORN_NOTE.md).  
+**Deployment guide:** [Step-by-step issuance, component storage, server separation, and verification flow](docs/ISSUANCE_STORAGE_AND_DEPLOYMENT.md).
 
 ## Run
 Requirements: JDK 21 and Gradle 8+. From this directory run:
