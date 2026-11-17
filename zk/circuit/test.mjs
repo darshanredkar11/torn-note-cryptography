@@ -104,6 +104,10 @@ function assertRejected(input, name) {
 
 if (!existsSync(WASM)) throw new Error("Circuit not compiled: " + WASM);
 
+// Circom emits CommonJS witness scripts. Keep the generated folder CommonJS
+// even though the surrounding circuit package uses ESM for this test runner.
+writeFileSync(path.join(BUILD, "TornNote_js", "package.json"), JSON.stringify({ type: "commonjs" }));
+
 // Build a deterministic 256-note inventory so the Merkle path has depth 8.
 const notes = Array.from({ length: 256 }, (_, i) => note(i));
 const leaves = notes.map(leaf);
