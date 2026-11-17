@@ -122,9 +122,10 @@ public final class BusinessIdentityWallet {
             if(index<0) return Map.of("ok",false,"decision","REJECTED","reason","wallet-inventory-exhausted");
             var note=notes.get(index);
             String tx=transaction(false);
-            var sig=TornNote.authorize(master,note.a(),note.b(),root,note.id(),
-                    TornNote.pub(note.a().pair()),TornNote.pub(note.b().pair()),tx,proofs.get(index),index);
-            if("master-only".equals(mode)) sig=new TornNote.SignatureSet(sig.master(),null,null);
+            boolean full="legitimate".equals(mode);
+            var sig=TornNote.authorizeAvailable(master,note.a(),note.b(),root,note.id(),
+                    TornNote.pub(note.a().pair()),TornNote.pub(note.b().pair()),tx,proofs.get(index),index,
+                    true,full,full);
             pending=new Pending(index,tx,sig);
             return Map.of("ok",true,"decision","AUTHORIZATION_CREATED","mode",mode,"noteIndex",index,
                     "includedFactors","master-only".equals(mode)?List.of("master"):List.of("master","fragment-A","fragment-B"),
