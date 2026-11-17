@@ -24,4 +24,4 @@ jobs:
         with:
           gradle-version: '8.10'
       - name: Build library and business wallet
-        run: gradle -p java clean test :business-identity-wallet:installDist
+        run: gradle -p java clean test :business-identity-wallet:test :business-identity-wallet:installDist :business-identity-wallet:compare -Piterations=1000
