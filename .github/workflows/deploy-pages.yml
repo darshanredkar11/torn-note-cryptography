@@ -1,0 +1,54 @@
+name: Deploy Torn Note showcase
+
+on:
+  push:
+    branches:
+      - showcase/fido2-torn-note-site
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        working-directory: showcase
+        run: npm install --no-audit --no-fund
+
+      - name: Type check
+        working-directory: showcase
+        run: npm run typecheck
+
+      - name: Build static site
+        working-directory: showcase
+        run: npm run build
+        env:
+          GITHUB_PAGES: "true"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: showcase/out
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
