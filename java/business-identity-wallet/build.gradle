@@ -19,5 +19,5 @@ tasks.register('compare', JavaExec) {
     description = 'Runs the conventional-vs-Torn-Note security and performance comparison.'
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'io.tornnote.wallet.ComparisonRunner'
-    args = providers.gradleProperty('iterations').orElse('1500').get()
+    args(providers.gradleProperty('iterations').orElse('1500').get())
 }
