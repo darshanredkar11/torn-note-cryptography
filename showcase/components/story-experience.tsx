@@ -84,7 +84,7 @@ export function StoryExperience() {
     <main className="story-site">
       <header className="story-header">
         <a href="#" className="story-brand"><span className="story-brand-mark"><NoteGlyph small /></span><span>TORN <i>NOTE</i></span></a>
-        <nav><a href="#how">How it works</a><a href="#protection">What it protects</a><a href="#research">Research</a></nav>
+        <nav><a href="#how">How it works</a><a href="/identity-wallet">Identity Wallet</a><a href="#protection">What it protects</a><a href="#research">Research</a></nav>
         <a className="story-github" href="https://github.com/darshanredkar11/torn-note-cryptography" target="_blank" rel="noreferrer">View research <ArrowUpRight size={14}/></a>
       </header>
 
