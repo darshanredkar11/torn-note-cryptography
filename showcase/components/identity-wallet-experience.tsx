@@ -66,14 +66,19 @@ function recoverKey(a: Share, b: Share) {
     return gfMul(numerator, denominatorInverse);
   });
 }
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
+}
 async function importAesKey(raw: Uint8Array, usages: KeyUsage[]) {
-  return crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, usages);
+  return crypto.subtle.importKey("raw", toArrayBuffer(raw), { name: "AES-GCM" }, false, usages);
 }
 async function aesEncrypt(key: CryptoKey, plaintext: Uint8Array, iv: Uint8Array) {
-  return new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext));
+  return new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv: toArrayBuffer(iv) }, key, toArrayBuffer(plaintext)));
 }
 async function aesDecrypt(key: CryptoKey, ciphertext: Uint8Array, iv: Uint8Array) {
-  return new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext));
+  return new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: toArrayBuffer(iv) }, key, toArrayBuffer(ciphertext)));
 }
 
 const defaultPayload = JSON.stringify({
