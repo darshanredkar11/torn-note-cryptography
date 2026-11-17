@@ -3,8 +3,6 @@ package io.tornnote.wallet;
 import io.tornnote.TornNote;
 import org.junit.jupiter.api.Test;
 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -73,17 +71,21 @@ class IssuerVerifierSeparationTest {
     @Test void fabricatedNoteOutsideIssuerInventoryIsRejected() throws Exception {
         NoteInventoryIssuer issuer = NoteInventoryIssuer.create();
         var inventory = issuer.issue("fabricated-note", 2);
-        var walletCredential = inventory.walletCredentials().get(0);
         var identity = TornNote.keys("ed25519");
         var fabricatedA = TornNote.keys("ed25519");
         var fabricatedB = TornNote.keys("ed25519");
+        byte[] fakeId = "not-issued".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        byte[] fakeRoot = TornNote.root(List.of(
+                TornNote.leaf(fakeId, TornNote.pub(fabricatedA.pair()), TornNote.pub(fabricatedB.pair()))));
         var fakeNote = new NoteInventoryIssuer.PublicNote(inventory.manifest().inventoryId(),
-                "not-issued".getBytes(java.nio.charset.StandardCharsets.UTF_8),
-                fabricatedA.pair().getPublic(), fabricatedB.pair().getPublic(),
-                walletCredential.publicNote().proof(), walletCredential.publicNote().index());
+                fakeId, fabricatedA.pair().getPublic(), fabricatedB.pair().getPublic(),
+                List.of(), 0);
+
+        // The wallet can sign a self-consistent object against a root of its own,
+        // but that root is not the issuer-signed inventory root.
         var fakeSignatures = TornNote.authorize(identity, fabricatedA, fabricatedB,
-                inventory.manifest().root(), fakeNote.noteId(), fakeNote.publicA(), fakeNote.publicB(),
-                TX, fakeNote.proof(), fakeNote.index());
+                fakeRoot, fakeNote.noteId(), fakeNote.publicA(), fakeNote.publicB(),
+                TX, List.of(), 0);
         var verifier = new AuthorizationVerifier(issuer.issuerPublicKey(),
                 new AuthorizationVerifier.InMemorySpendStore());
 
