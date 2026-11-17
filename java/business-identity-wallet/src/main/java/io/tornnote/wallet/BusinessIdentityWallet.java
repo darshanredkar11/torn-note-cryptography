@@ -15,7 +15,11 @@ import java.util.concurrent.Executors;
 /** Local business identity wallet demonstrator. Demo keys and spent state are in memory. */
 public final class BusinessIdentityWallet {
     private static final ObjectMapper JSON = new ObjectMapper().enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
-    private static final DemoState STATE = new DemoState();
+    private static final DemoState STATE = createState();
+    private static DemoState createState() {
+        try { return new DemoState(); }
+        catch (GeneralSecurityException e) { throw new ExceptionInInitializerError(e); }
+    }
     private BusinessIdentityWallet() {}
 
     public static void main(String[] args) throws Exception {
