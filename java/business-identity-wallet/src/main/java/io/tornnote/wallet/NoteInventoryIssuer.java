@@ -123,5 +123,20 @@ public final class NoteInventoryIssuer {
                     publicNote.noteId(), publicNote.publicA(), publicNote.publicB(),
                     canonicalTransaction, publicNote.proof(), publicNote.index());
         }
+
+        /** Sign the V1 note-binding digest using the domain-separated V1 signature suite. */
+        public TornNote.SignatureSet authorizeBound(TornNote.Keys identityKey,
+                                                    InventoryManifest manifest,
+                                                    NoteAuthorizationEnvelopeV1 envelope)
+                throws GeneralSecurityException {
+            Objects.requireNonNull(identityKey, "identityKey");
+            Objects.requireNonNull(manifest, "manifest");
+            Objects.requireNonNull(envelope, "envelope");
+            if (!envelope.matches(manifest, publicNote, identityKey.pair().getPublic()))
+                throw new SecurityException("note-authorization-envelope-mismatch");
+            return TornNote.authorizeBound(identityKey, factorA, factorB, manifest.root(),
+                    publicNote.noteId(), publicNote.publicA(), publicNote.publicB(),
+                    envelope.digest(), publicNote.proof(), publicNote.index());
+        }
     }
 }
