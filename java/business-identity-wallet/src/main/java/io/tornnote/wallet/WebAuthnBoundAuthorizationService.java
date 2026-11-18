@@ -152,10 +152,10 @@ public final class WebAuthnBoundAuthorizationService {
             if (!WebAuthnIdentity.usernameFor(transaction.tenantId(), transaction.subjectId()).equals(assertion.username()))
                 return reject(challengeId, "webauthn-subject-mismatch");
 
-            String spendKey = manifest.inventoryId() + ":"
+            String spendKey = transaction.tenantId() + ":" + manifest.inventoryId() + ":"
                     + Base64.getUrlEncoder().withoutPadding().encodeToString(note.noteId());
             BoundAuthorizationStore.OutboxCommand outbox = new BoundAuthorizationStore.OutboxCommand(
-                    transaction.transactionId(), transaction.transactionId(), transaction.tenantId(),
+                    transaction.idempotencyKey(), transaction.transactionId(), transaction.tenantId(),
                     transaction.subjectId(), transaction.audience(), transaction.actionType(),
                     transaction.targetId(), transaction.digest(), transaction.canonicalBytes(),
                     transaction.payloadFields());

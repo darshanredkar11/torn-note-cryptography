@@ -52,6 +52,22 @@ class TransactionBindingV1Test {
     }
 
     @Test
+    void idempotencyKeyIsTenantScopedAndStableForTransactionRetries() {
+        var first = new TransactionEnvelopeV1("same-id", "tenant-a", "subject", "audience",
+                "UPDATE", "target", "resource-v1", "policy-v1",
+                Map.of("value", "one"), nonce(), ISSUED_AT, EXPIRES_AT);
+        var retry = new TransactionEnvelopeV1("same-id", "tenant-a", "subject", "audience",
+                "UPDATE", "target", "resource-v1", "policy-v1",
+                Map.of("value", "two"), nonce(), ISSUED_AT, EXPIRES_AT);
+        var otherTenant = new TransactionEnvelopeV1("same-id", "tenant-b", "subject", "audience",
+                "UPDATE", "target", "resource-v1", "policy-v1",
+                Map.of("value", "one"), nonce(), ISSUED_AT, EXPIRES_AT);
+
+        assertEquals(first.idempotencyKey(), retry.idempotencyKey());
+        assertNotEquals(first.idempotencyKey(), otherTenant.idempotencyKey());
+    }
+
+    @Test
     void transactionDigestChangesWhenApprovedPayloadChanges() {
         var original = transaction(Map.of("amount_minor", "850000", "currency", "INR"));
         var changed = new TransactionEnvelopeV1(original.transactionId(), original.tenantId(),

@@ -100,7 +100,7 @@ public final class AuthorizationVerifier {
             throws GeneralSecurityException {
         Result verification = verifyBound(manifest, note, identityPublicKey, transaction, envelope, signatures);
         if (!verification.accepted()) return verification;
-        String spendKey = manifest.inventoryId() + ":"
+        String spendKey = transaction.tenantId() + ":" + manifest.inventoryId() + ":"
                 + Base64.getUrlEncoder().withoutPadding().encodeToString(note.noteId());
         if (!spendStore.consumeIfAbsent(spendKey)) return Result.reject("note-already-spent");
         return Result.accept();

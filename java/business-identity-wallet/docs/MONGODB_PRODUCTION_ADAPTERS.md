@@ -20,11 +20,11 @@ The protected authorization commit spans multiple collections and uses a MongoDB
 
 Yubico usernames are derived as opaque, domain-separated identifiers from both tenant and subject using `WebAuthnIdentity.usernameFor(tenantId, subjectId)`. Use this exact function for registration and authentication. Raw subject IDs are not used as Yubico usernames, preventing same-named subjects in different tenants from sharing an account lookup.
 
-User handles must be random opaque bytes (recommended 32 bytes), not email addresses or other PII. The user-handle owner record prevents one handle from being rebound to a different tenant/subject. The credential collection stores credential ID, user handle, COSE public key, counter, transport hints, backup flags and active/revoked status. It never stores a passkey private key.
+User handles must be random opaque bytes (1–64 bytes; recommended 32 bytes), not email addresses or other PII. A unique index on the derived username enforces one stable handle per tenant-scoped subject, and the user-handle owner record prevents one handle from being rebound to a different tenant/subject. The credential collection stores credential ID, user handle, COSE public key, counter, transport hints, backup flags and active/revoked status. It never stores a passkey private key.
 
 Call `MongoCredentialRepository.storeVerifiedRegistration` only after `RelyingParty.finishRegistration` succeeds. It requires registration UV. Revocation is a soft state transition: inactive credentials are excluded from login but their IDs remain visible to Yubico's `lookupAll` duplicate-registration check.
 
-Signature counters are updated with MongoDB `$max`, so concurrent successful assertions cannot move the stored counter backwards. Synced passkeys may use zero counters; zero does not lower an existing value.
+Wire `MongoCredentialRepository.updateSignatureCountOrReject` as the Yubico assertion engine's credential-state updater. This fails closed if a credential was revoked or removed after its public key was looked up. Signature counters are updated with MongoDB `$max`, so concurrent successful assertions cannot move the stored counter backwards. Synced passkeys may use zero counters; zero does not lower an existing value.
 
 ## Challenge, note and outbox lifecycle
 
@@ -43,7 +43,7 @@ The challenge collection has a TTL index on `expiresAt`. TTL deletion is asynchr
 
 The outbox is at-least-once. A worker atomically leases a due command. Expired leases can be reclaimed after a worker crash. Workers acknowledge using their lease owner ID or schedule retries.
 
-The downstream action must use the stable `transactionId` as its idempotency key where supported. A lease cannot provide exactly-once effects in an external service. For a timeout with unknown outcome, reconcile the remote result before retrying a non-idempotent operation.
+The outbox ID and downstream idempotency key are a domain-separated hash of tenant ID plus transaction ID. This prevents two tenants from colliding when they choose the same local transaction identifier. The downstream action must use this stable key where supported. A lease cannot provide exactly-once effects in an external service. For a timeout with unknown outcome, reconcile the remote result before retrying a non-idempotent operation.
 
 ## Configuration
 

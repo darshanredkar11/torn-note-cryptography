@@ -50,6 +50,9 @@ public final class MongoCredentialRepository implements CredentialRepository {
         credentials.createIndex(Indexes.compoundIndex(
                 Indexes.ascending("userHandle"), Indexes.ascending("active")));
         credentials.createIndex(Indexes.ascending("tenantId", "subjectId"));
+        // Each tenant-scoped subject has exactly one stable WebAuthn user handle.
+        userHandles.createIndex(Indexes.ascending("username"),
+                new com.mongodb.client.model.IndexOptions().unique(true));
     }
 
     /**
@@ -86,6 +89,8 @@ public final class MongoCredentialRepository implements CredentialRepository {
             throw new SecurityException("webauthn-username-does-not-match-tenant-subject");
         if (signatureCount < 0) throw new IllegalArgumentException("negative-signature-counter");
 
+        if (userHandle.size() < 1 || userHandle.size() > 64)
+            throw new IllegalArgumentException("user-handle-must-be-between-1-and-64-bytes");
         String userHandleId = userHandle.getBase64Url();
         String credentialIdValue = credentialId.getBase64Url();
         Date now = new Date();
@@ -170,6 +175,11 @@ public final class MongoCredentialRepository implements CredentialRepository {
     }
 
     /** Monotonic update: concurrent assertions cannot move the stored counter backwards. */
+    public void updateSignatureCountOrReject(String username, String credentialIdBase64Url, long signatureCount) {
+        if (!updateSignatureCount(username, credentialIdBase64Url, signatureCount))
+            throw new SecurityException("credential-revoked-or-not-found-during-counter-update");
+    }
+
     public boolean updateSignatureCount(String username, String credentialIdBase64Url, long signatureCount) {
         if (signatureCount < 0) throw new IllegalArgumentException("negative-signature-counter");
         var result = credentials.updateOne(and(eq("_id", credentialIdBase64Url),

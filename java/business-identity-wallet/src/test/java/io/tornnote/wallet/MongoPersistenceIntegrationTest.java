@@ -164,8 +164,8 @@ class MongoPersistenceIntegrationTest {
                 .append("signatureCount", 4L).append("transports", List.of("internal"))
                 .append("backupEligible", true).append("backupState", true).append("active", true));
 
-        ByteArray credential = ByteArray.fromBase64Url(credentialId);
-        ByteArray userHandle = ByteArray.fromBase64Url(handle);
+        ByteArray credential = new ByteArray(java.util.Base64.getUrlDecoder().decode(credentialId));
+        ByteArray userHandle = new ByteArray(java.util.Base64.getUrlDecoder().decode(handle));
         assertEquals(1, credentials.getCredentialIdsForUsername(username).size());
         assertEquals(userHandle, credentials.getUserHandleForUsername(username).orElseThrow());
         assertEquals(username, credentials.getUsernameForUserHandle(userHandle).orElseThrow());
@@ -181,6 +181,18 @@ class MongoPersistenceIntegrationTest {
         assertTrue(credentials.getCredentialIdsForUsername(username).isEmpty());
         assertTrue(credentials.lookup(credential, userHandle).isEmpty());
         assertEquals(1, credentials.lookupAll(credential).size());
+    }
+
+    @Test
+    void aTenantScopedUsernameCanOwnOnlyOneStableUserHandle() {
+        new MongoCredentialRepository(client, database); // creates the unique username index
+        var owners = database.getCollection("webauthn_user_handles");
+        owners.insertOne(new Document("_id", "handle-1")
+                .append("username", "tenant-scoped-user").append("tenantId", "tenant")
+                .append("subjectId", "subject"));
+        assertThrows(com.mongodb.MongoWriteException.class, () -> owners.insertOne(
+                new Document("_id", "handle-2").append("username", "tenant-scoped-user")
+                        .append("tenantId", "tenant").append("subjectId", "subject")));
     }
 
     @Test

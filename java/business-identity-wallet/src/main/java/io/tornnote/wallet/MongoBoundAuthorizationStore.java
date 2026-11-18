@@ -121,8 +121,9 @@ public final class MongoBoundAuthorizationStore implements BoundAuthorizationSto
                         .append("transactionDigest", command.transactionDigest())
                         .append("consumedAt", commitTime));
 
-                authorizations.insertOne(session, new Document("_id", command.transactionId())
+                authorizations.insertOne(session, new Document("_id", command.idempotencyKey())
                         .append("idempotencyKey", command.idempotencyKey())
+                        .append("transactionId", command.transactionId())
                         .append("tenantId", command.tenantId())
                         .append("subjectId", command.subjectId())
                         .append("audience", command.audience())

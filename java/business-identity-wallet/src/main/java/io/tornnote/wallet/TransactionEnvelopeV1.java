@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -101,6 +102,22 @@ public final class TransactionEnvelopeV1 {
     }
 
     public byte[] digest() { return Hashes.sha256(DIGEST_DOMAIN, canonicalBytes()); }
+
+    /** Stable idempotency key scoped by tenant as well as transaction ID. */
+    public String idempotencyKey() {
+        byte[] domain = "TORN-NOTE/idempotency-key/v1\\0".getBytes(StandardCharsets.US_ASCII);
+        try {
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            DataOutputStream out = new DataOutputStream(bytes);
+            writeText(out, tenantId);
+            writeText(out, transactionId);
+            out.flush();
+            return "tn1_" + Base64.getUrlEncoder().withoutPadding()
+                    .encodeToString(Hashes.sha256(domain, bytes.toByteArray()));
+        } catch (IOException impossible) {
+            throw new IllegalStateException("in-memory-idempotency-encoding-failed", impossible);
+        }
+    }
 
     public boolean isValidAt(Instant now) {
         long millis = Objects.requireNonNull(now, "now").toEpochMilli();
