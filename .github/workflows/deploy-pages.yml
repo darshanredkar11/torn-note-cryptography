@@ -3,7 +3,7 @@ name: Deploy Torn Note showcase
 on:
   push:
     branches:
-      - showcase/fido2-torn-note-site
+      - main
   workflow_dispatch:
 
 permissions:
