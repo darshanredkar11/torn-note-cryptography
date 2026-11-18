@@ -77,6 +77,7 @@ function StoryStep({ stage, index }: { stage: typeof stages[number]; index: numb
 
 export function StoryExperience() {
   const [attack, setAttack] = useState("replay");
+  const [businessChoice, setBusinessChoice] = useState("approve");
   const active = attacks.find((item) => item.id === attack) ?? attacks[0];
   const Icon = active.icon;
 
@@ -84,7 +85,7 @@ export function StoryExperience() {
     <main className="story-site">
       <header className="story-header">
         <a href="#" className="story-brand"><span className="story-brand-mark"><NoteGlyph small /></span><span>TORN <i>NOTE</i></span></a>
-        <nav><a href="#how">How it works</a><a href="/identity-wallet">Identity Wallet</a><a href="#protection">What it protects</a><a href="#research">Research</a></nav>
+        <nav><a href="#how">How it works</a><a href="identity-wallet/">Identity Wallet</a><a href="#protection">What it protects</a><a href="#research">Research</a></nav><details className="story-mobile-menu"><summary>Explore</summary><div><a href="#how">How it works</a><a href="identity-wallet/">Identity Wallet</a><a href="#protection">What it protects</a><a href="#research">Research</a></div></details>
         <a className="story-github" href="https://github.com/darshanredkar11/torn-note-cryptography" target="_blank" rel="noreferrer">View research <ArrowUpRight size={14}/></a>
       </header>
 
@@ -124,6 +125,31 @@ export function StoryExperience() {
         </div>
       </section>
 
+
+      <section className="business-decision" id="decision">
+        <div className="story-container business-decision-grid">
+          <div className="business-decision-copy">
+            <div className="story-eyebrow">A SIMPLE BUSINESS EXAMPLE</div>
+            <h2>Would you approve this bank-account change?</h2>
+            <p>A supplier asks your finance team to replace its payment account. The employee is signed in, but the request itself could still be fraudulent.</p>
+            <div className="decision-request"><span>CHANGE REQUEST</span><strong>Northstar Components</strong><small>Replace account ending 4821 before the next payment run</small></div>
+          </div>
+          <div className="business-decision-demo">
+            <div className="decision-question">What should the finance system do?</div>
+            <div className="decision-choices" role="group" aria-label="Choose how to handle the supplier bank change">
+              <button type="button" className={businessChoice === "approve" ? "selected" : ""} onClick={() => setBusinessChoice("approve")}>Approve because the employee is logged in</button>
+              <button type="button" className={businessChoice === "verify" ? "selected" : ""} onClick={() => setBusinessChoice("verify")}>Ask for proof tied to this exact change</button>
+              <button type="button" className={businessChoice === "reject" ? "selected" : ""} onClick={() => setBusinessChoice("reject")}>Reject every bank-detail change</button>
+            </div>
+            <div className="decision-feedback" aria-live="polite">
+              {businessChoice === "approve" && <><strong className="decision-warning">Risk: login is not enough.</strong><p>A real employee session can be misused. It does not prove that account 4821 is the intended destination.</p></>}
+              {businessChoice === "verify" && <><strong className="decision-good">A stronger approval path.</strong><p>Check who is authorizing the request and require a separate, transaction-bound Torn Note proof before the system accepts it. The note is consumed after successful use.</p></>}
+              {businessChoice === "reject" && <><strong className="decision-neutral">Safe, but impractical.</strong><p>Businesses still need to change supplier details. The goal is not to block every change; it is to verify the right change with specific authorization.</p></>}
+            </div>
+            <div className="decision-disclaimer">Interactive explanation only — this page does not connect to a bank, authenticate a user or execute a real authorization.</div>
+          </div>
+        </div>
+      </section>
       <section className="story-idea">
         <div className="story-container idea-inner">
           <motion.div className="idea-intro" variants={rise} initial="hidden" whileInView="visible" viewport={{ once: true }}>
@@ -196,7 +222,7 @@ export function StoryExperience() {
             <div className="identity-outcome"><CheckCircle2 size={19}/> Independent evidence for one consequential decision</div>
           </div>
         </div>
-        <div className="story-container identity-note">Integration note: WebAuthn credentials and Torn Note Ed25519 factors are separate proof systems. A future integration must explicitly bind the same transaction digest into the server-generated passkey challenge and the Torn Note authorization.</div>
+        <div className="story-container identity-note">In the Java reference integration, a WebAuthn assertion is validated separately and the server binds the pending passkey request to the same transaction and Torn Note authorization context. The browser showcase here is illustrative; it does not run a live passkey ceremony.</div>
       </section>
 
       <section className="story-benefits">
@@ -218,7 +244,7 @@ export function StoryExperience() {
             <div><span>01</span><strong>Ed25519 signatures</strong><small>Independent note-specific signing factors.</small></div>
             <div><span>02</span><strong>SHA-256 Merkle commitment</strong><small>Proof that a note belongs to the committed inventory.</small></div>
             <div><span>03</span><strong>Issuer trust and manifest</strong><small>Signed inventory provenance checked by the verifier.</small></div>
-            <div><span>04</span><strong>Spent-note state</strong><small>Replay control demonstrated with an in-memory store.</small></div>
+            <div><span>04</span><strong>Spent-note state</strong><small>Replay control with atomic consumption; MongoDB persistence adapters are available.</small></div>
           </div>
         </div>
       </section>
@@ -229,9 +255,9 @@ export function StoryExperience() {
           <h2>A research prototype, <span>not a finished security product.</span></h2>
           <div className="status-columns">
             <div><div className="status-column-label done"><Check size={15}/> IMPLEMENTED IN THE JAVA PROTOTYPE</div><ul><li>Issuer-created finite inventory and signed Merkle-root manifest</li><li>Two independent note signing factors</li><li>Issuer trust, note membership and transaction-signature checks</li><li>Replay and concurrent-consumption tests</li></ul></div>
-            <div><div className="status-column-label planned">NEXT ENGINEERING WORK</div><ul><li>Real FIDO2 / WebAuthn validation adapter</li><li>Durable, atomic spent-note database</li><li>Independent issuer, wallet and verifier deployments</li><li>Secure factor custody, recovery and external security review</li></ul></div>
+            <div><div className="status-column-label planned">NEXT ENGINEERING WORK</div><ul><li>Complete browser passkey registration and assertion journey with cross-platform tests</li><li>Production deployment, operations and recovery workflows around the MongoDB adapters</li><li>Independent issuer, wallet and verifier deployments</li><li>Secure factor custody, recovery and external security review</li></ul></div>
           </div>
-          <p className="status-disclaimer">The animated scenes and attack lab are educational simulations. They do not execute real cryptography, authenticate a passkey or authorize a payment. The current prototype's spend store is in-memory and is not production-grade.</p>
+          <p className="status-disclaimer">The animated scenes, business decision demo and attack lab are educational simulations. They do not execute the Java cryptographic verifier, authenticate a browser passkey or authorize a payment. The Java reference module includes a WebAuthn assertion adapter and MongoDB persistence adapters, but this is not yet a complete production service.</p>
         </div>
       </section>
 
