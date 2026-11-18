@@ -48,13 +48,15 @@ public final class YubicoWebAuthnAssertionEngine implements WebAuthnAssertionEng
                 .response(response)
                 .build());
 
-        if (result.isSuccess()) {
-            credentialStateUpdater.update(result.getUsername(),
-                    result.getCredential().getCredentialId().getBase64Url(),
-                    result.getSignatureCount());
+        if (!result.isSuccess()) {
+            return new VerifiedAssertion(false, false, null, null, 0);
         }
 
-        return new VerifiedAssertion(result.isSuccess(), result.isUserVerified(), result.getUsername(),
-                result.getCredential().getCredentialId().getBase64Url(), result.getSignatureCount());
+        String username = result.getUsername();
+        String credentialId = result.getCredential().getCredentialId().getBase64Url();
+        long signatureCount = result.getSignatureCount();
+        credentialStateUpdater.update(username, credentialId, signatureCount);
+
+        return new VerifiedAssertion(true, result.isUserVerified(), username, credentialId, signatureCount);
     }
 }

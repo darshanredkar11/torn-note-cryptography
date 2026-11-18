@@ -73,7 +73,8 @@ class WebAuthnBoundAuthorizationServiceTest {
                 store, issuer);
 
         var started = service.start(tx, inventory.manifest(), walletNote.publicNote(), identity.pair().getPublic());
-        assertEquals(java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(noteEnvelope.digest()),\n                started.noteAuthorizationDigestBase64Url());
+        assertEquals(java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(noteEnvelope.digest()),
+                started.noteAuthorizationDigestBase64Url());
 
         var result = service.finish(started.challengeId(), tx, inventory.manifest(), walletNote.publicNote(),
                 identity.pair().getPublic(), signatures, "{\"type\":\"webauthn.get\"}");
