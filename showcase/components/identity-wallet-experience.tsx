@@ -192,12 +192,13 @@ export function IdentityWalletExperience() {
   return (
     <main className="wallet-page">
       <header className="story-header wallet-header">
-        <a href="/" className="story-brand"><span className="story-brand-mark"><span className="wallet-brand-glyph">⌁</span></span><span>TORN <i>NOTE</i></span></a>
+        <a href="../" className="story-brand"><span className="story-brand-mark"><span className="wallet-brand-glyph">⌁</span></span><span>TORN <i>NOTE</i></span></a>
         <nav>
-          <a href="/#how">How it works</a>
-          <a href="/identity-wallet" aria-current="page">Identity Wallet</a>
-          <a href="/#protection">Security model</a>
+          <a href="../#how">How it works</a>
+          <a href="../identity-wallet/" aria-current="page">Identity Wallet</a>
+          <a href="../#protection">Security model</a>
         </nav>
+        <details className="story-mobile-menu"><summary>Explore</summary><div><a href="../#how">How it works</a><a href="../identity-wallet/" aria-current="page">Identity Wallet</a><a href="../#protection">Security model</a></div></details>
         <a className="story-github" href="https://github.com/darshanredkar11/torn-note-cryptography" target="_blank" rel="noreferrer">View research <ArrowUpRight size={14}/></a>
       </header>
 
