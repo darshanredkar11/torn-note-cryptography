@@ -60,7 +60,11 @@ test('canonical transaction encoding rejects ambiguous or unsupported values', (
   assert.throws(() => canonicalTransactionBytes({ amount: undefined }), /undefined/);
   assert.throws(() => canonicalTransactionBytes({ amount: Number.NaN }), /finite/);
   assert.throws(() => canonicalTransactionBytes({ amount: Infinity }), /finite/);
-  assert.throws(() => canonicalTransactionBytes(new Date()), /plain objects/);
+  assert.throws(() => canonicalTransactionBytes({ amount: Number.MAX_SAFE_INTEGER + 1 }), /safe integers/);
+  const sparse = [];
+  sparse.length = 1;
+  assert.throws(() => canonicalTransactionBytes({ items: sparse }), /holes/);
+  assert.throws(() => canonicalTransactionBytes(new Date()), /plain object/);
   const cyclic = {};
   cyclic.self = cyclic;
   assert.throws(() => canonicalTransactionBytes(cyclic), /cycles/);
