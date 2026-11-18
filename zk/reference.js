@@ -42,6 +42,9 @@ function canonicalize(value, ancestors = new Set()) {
   if (typeof value === 'string' || typeof value === 'boolean') return JSON.stringify(value);
   if (typeof value === 'number') {
     if (!Number.isFinite(value)) throw new TypeError('transaction numbers must be finite');
+    if (Number.isInteger(value) && !Number.isSafeInteger(value)) {
+      throw new TypeError('transaction integers must be safe integers');
+    }
     return Object.is(value, -0) ? '0' : JSON.stringify(value);
   }
   if (typeof value !== 'object') throw new TypeError('transaction contains an unsupported value');
@@ -49,10 +52,29 @@ function canonicalize(value, ancestors = new Set()) {
   ancestors.add(value);
   try {
     if (Array.isArray(value)) {
-      return '[' + value.map(item => {
-        if (item === undefined) throw new TypeError('transaction arrays must not contain undefined');
-        return canonicalize(item, ancestors);
-      }).join(',') + ']';
+      if (Object.getPrototypeOf(value) !== Array.prototype ||
+          Object.getOwnPropertySymbols(value).length !== 0) {
+        throw new TypeError('transaction arrays must be ordinary arrays');
+      }
+      const items = [];
+      for (let i = 0; i < value.length; i++) {
+        if (!Object.prototype.hasOwnProperty.call(value, i)) {
+          throw new TypeError('transaction arrays must not contain holes');
+        }
+        const descriptor = Object.getOwnPropertyDescriptor(value, String(i));
+        if (!descriptor || !Object.prototype.hasOwnProperty.call(descriptor, 'value')) {
+          throw new TypeError('transaction arrays must not contain getters or setters');
+        }
+        if (descriptor.value === undefined) {
+          throw new TypeError('transaction arrays must not contain undefined');
+        }
+        items.push(canonicalize(descriptor.value, ancestors));
+      }
+      const extraKeys = Object.keys(value).filter(key =>
+        !/^(0|[1-9][0-9]*)$/.test(key) || Number(key) >= value.length
+      );
+      if (extraKeys.length !== 0) throw new TypeError('transaction arrays must not contain extra properties');
+      return '[' + items.join(',') + ']';
     }
     if (!isPlainObject(value)) throw new TypeError('transaction objects must be plain objects');
     if (Object.getOwnPropertySymbols(value).length !== 0) throw new TypeError('symbol keys are not supported');
@@ -79,7 +101,7 @@ export function canonicalTransactionBytes(message) {
 }
 
 export const hashLeaf = ({ noteId, X, ZA, ZB, r }) =>
-  H(Buffer.from('TORN-LEAF/v2'), bytes(noteId, 'noteId'), bytes(X, 'X'),
+  H(DOMAIN.leaf, bytes(noteId, 'noteId'), bytes(X, 'X'),
     bytes(ZA, 'ZA'), bytes(ZB, 'ZB'), bytes(r, 'r'));
 
 export const deriveNullifierKey = ({ x, zA, zB }) =>
