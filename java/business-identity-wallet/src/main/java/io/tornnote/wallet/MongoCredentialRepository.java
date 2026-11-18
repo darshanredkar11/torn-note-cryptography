@@ -131,7 +131,7 @@ public final class MongoCredentialRepository implements CredentialRepository {
         Set<PublicKeyCredentialDescriptor> result = new TreeSet<>();
         for (Document doc : credentials.find(and(eq("username", username), eq("active", true)))) {
             result.add(PublicKeyCredentialDescriptor.builder()
-                    .id(ByteArray.fromBase64Url(doc.getString("_id")))
+                    .id(decodeBase64Url(doc.getString("_id")))
                     .transports(toTransports(doc))
                     .build());
         }
@@ -142,7 +142,7 @@ public final class MongoCredentialRepository implements CredentialRepository {
     public Optional<ByteArray> getUserHandleForUsername(String username) {
         Document doc = credentials.find(and(eq("username", username), eq("active", true))).first();
         return doc == null ? Optional.empty()
-                : Optional.of(ByteArray.fromBase64Url(doc.getString("userHandle")));
+                : Optional.of(decodeBase64Url(doc.getString("userHandle")));
     }
 
     @Override
@@ -204,8 +204,8 @@ public final class MongoCredentialRepository implements CredentialRepository {
 
     private static RegisteredCredential toRegisteredCredential(Document doc) {
         return RegisteredCredential.builder()
-                .credentialId(ByteArray.fromBase64Url(doc.getString("_id")))
-                .userHandle(ByteArray.fromBase64Url(doc.getString("userHandle")))
+                .credentialId(decodeBase64Url(doc.getString("_id")))
+                .userHandle(decodeBase64Url(doc.getString("userHandle")))
                 .publicKeyCose(new ByteArray(doc.get("publicKeyCose", byte[].class)))
                 .signatureCount(doc.getLong("signatureCount") == null ? 0L : doc.getLong("signatureCount"))
                 .transports(toTransports(doc))
