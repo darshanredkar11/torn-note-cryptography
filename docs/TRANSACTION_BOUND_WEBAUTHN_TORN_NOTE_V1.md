@@ -108,9 +108,18 @@ This profile does not replace WebAuthn passwordless login, modify authenticator 
 - [x] Note authorization envelope and `D_note`.
 - [x] Domain-separated Torn Note V1 bound signatures.
 - [x] Tests for transaction changes, note swapping and legacy/V1 signature separation.
-- [ ] Yubico WebAuthn registration and assertion adapter.
-- [ ] Persistent credential and challenge repositories.
-- [ ] Atomic challenge + note spend + outbox transaction.
+- [x] Yubico WebAuthn assertion adapter (step-up; credential registration remains application-managed).
+- [ ] Persistent credential and challenge repositories (the in-memory implementation is test-only).
+- [x] Atomic challenge + note spend + outbox store contract and in-memory test adapter; production database adapter remains pending.
 - [ ] Browser passkey flow and cross-platform tests.
 - [ ] Scoped issuer manifest and hardened V1 Merkle tree.
 - [ ] Independent cryptographic and application security review.
+
+
+## 8. Step-up orchestration implementation
+
+The Java module includes `YubicoWebAuthnAssertionEngine`, which creates a relying-party assertion request with `UserVerificationRequirement.REQUIRED`, persists the complete `AssertionRequest` JSON for later verification, and delegates response validation to Yubico's `RelyingParty.finishAssertion`. The application supplies its own `CredentialRepository`, RP ID, exact origin allowlist and credential-state updater.
+
+`WebAuthnBoundAuthorizationService` stores the pending request together with `H_tx`, `D_note`, tenant, subject, audience and expiry. On completion it claims the challenge once, recomputes the note envelope, verifies Torn Note signatures, verifies the WebAuthn assertion and user-verification result, checks the assertion username against the bound subject, then invokes the atomic store commit.
+
+`BoundAuthorizationStore.InMemory` is for tests only. The production store must implement the documented claim and commit operations using a shared durable database. Its commit must atomically transition the challenge, reserve the note, record the authorization and insert an outbox command. The external action worker executes from the outbox with the transaction ID as idempotency key.
