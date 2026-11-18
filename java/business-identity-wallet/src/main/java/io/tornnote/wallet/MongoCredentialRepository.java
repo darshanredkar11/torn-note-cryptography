@@ -17,6 +17,7 @@ import com.yubico.webauthn.data.UserIdentity;
 import org.bson.Document;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -191,6 +192,14 @@ public final class MongoCredentialRepository implements CredentialRepository {
     public long countActiveCredentials(String tenantId, String subjectId) {
         return credentials.countDocuments(and(eq("tenantId", tenantId),
                 eq("subjectId", subjectId), eq("active", true)));
+    }
+
+    private static ByteArray decodeBase64Url(String value) {
+        try {
+            return new ByteArray(Base64.getUrlDecoder().decode(value));
+        } catch (IllegalArgumentException invalid) {
+            throw new IllegalStateException("corrupt-base64url-credential-record", invalid);
+        }
     }
 
     private static RegisteredCredential toRegisteredCredential(Document doc) {
