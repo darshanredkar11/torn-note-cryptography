@@ -71,7 +71,7 @@ class WebAuthnBoundAuthorizationServiceTest {
         var signatures = walletNote.authorizeBound(identity, inventory.manifest(), noteEnvelope);
         var store = new BoundAuthorizationStore.InMemory();
         var service = service(new FakeAssertionEngine(
-                new WebAuthnAssertionEngine.VerifiedAssertion(true, true, "subject-001", "credential-id", 8)),
+                new WebAuthnAssertionEngine.VerifiedAssertion(true, true, WebAuthnIdentity.usernameFor("tenant-001", "subject-001"), "credential-id", 8)),
                 store, issuer);
 
         var started = service.start(PRINCIPAL, tx, inventory.manifest(), walletNote.publicNote(), identity.pair().getPublic());
@@ -100,7 +100,7 @@ class WebAuthnBoundAuthorizationServiceTest {
         var signatures = walletNote.authorizeBound(identity, inventory.manifest(), envelope);
         var store = new BoundAuthorizationStore.InMemory();
         var service = service(new FakeAssertionEngine(
-                new WebAuthnAssertionEngine.VerifiedAssertion(true, false, "subject-001", "credential-id", 1)),
+                new WebAuthnAssertionEngine.VerifiedAssertion(true, false, WebAuthnIdentity.usernameFor("tenant-001", "subject-001"), "credential-id", 1)),
                 store, issuer);
 
         var started = service.start(PRINCIPAL, tx, inventory.manifest(), walletNote.publicNote(), identity.pair().getPublic());
@@ -125,7 +125,7 @@ class WebAuthnBoundAuthorizationServiceTest {
         var signatures = walletNote.authorizeBound(identity, inventory.manifest(), envelope);
         var store = new BoundAuthorizationStore.InMemory();
         var service = service(new FakeAssertionEngine(
-                new WebAuthnAssertionEngine.VerifiedAssertion(true, true, "subject-001", "credential-id", 1)),
+                new WebAuthnAssertionEngine.VerifiedAssertion(true, true, WebAuthnIdentity.usernameFor("tenant-001", "subject-001"), "credential-id", 1)),
                 store, issuer);
 
         var started = service.start(PRINCIPAL, tx, inventory.manifest(), walletNote.publicNote(), identity.pair().getPublic());
@@ -154,7 +154,7 @@ class WebAuthnBoundAuthorizationServiceTest {
         var signatures = walletNote.authorizeBound(identity, inventory.manifest(), envelope);
         var store = new BoundAuthorizationStore.InMemory();
         var service = service(new FakeAssertionEngine(
-                new WebAuthnAssertionEngine.VerifiedAssertion(true, true, "somebody-else", "credential-id", 1)),
+                new WebAuthnAssertionEngine.VerifiedAssertion(true, true, WebAuthnIdentity.usernameFor("tenant-001", "somebody-else"), "credential-id", 1)),
                 store, issuer);
         var started = service.start(PRINCIPAL, tx, inventory.manifest(), walletNote.publicNote(), identity.pair().getPublic());
 
@@ -173,7 +173,7 @@ class WebAuthnBoundAuthorizationServiceTest {
         var tx = transaction();
         var store = new BoundAuthorizationStore.InMemory();
         var service = service(new FakeAssertionEngine(
-                new WebAuthnAssertionEngine.VerifiedAssertion(true, true, "subject-001", "credential-id", 1)),
+                new WebAuthnAssertionEngine.VerifiedAssertion(true, true, WebAuthnIdentity.usernameFor("tenant-001", "subject-001"), "credential-id", 1)),
                 store, issuer);
         var started = service.start(PRINCIPAL, tx, inventory.manifest(),
                 walletNote.publicNote(), identity.pair().getPublic());

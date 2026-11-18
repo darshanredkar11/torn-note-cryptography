@@ -34,3 +34,12 @@ The current web demo has not yet been refactored to deploy these roles as separa
 ## Limitations
 
 This is an in-memory research demonstrator, not a production wallet. Keys are demo keys; wallet fragments are not delivered through a real protected channel; the web demo still runs in one process; and the included spend store is not durable or distributed. There is no real identity proofing, employee lifecycle, IAM, payment rail, HSM, or KMS integration. The current protocol uses three independent signatures, not FROST or a reconstructed threshold key. Do not use it for real payments or credentials.
+
+
+## MongoDB production adapters
+
+Mongo-backed implementations are available for the Yubico credential repository, subject-key registry, pending challenges, note spends and transactional outbox. See [MongoDB production adapters](docs/MONGODB_PRODUCTION_ADAPTERS.md).
+
+Configure `MONGODB_URI` and optionally `MONGODB_DATABASE`, then create the production wiring with `MongoPersistence.fromEnvironment()`. The authorization store requires a MongoDB replica set or sharded cluster; standalone MongoDB is rejected because it cannot atomically commit challenge consumption, note spending, authorization and outbox records.
+
+These are production-oriented persistence components, not a complete production service. The application must still provide authenticated request principals, verified WebAuthn registration and account lifecycle, secure MongoDB networking/credentials, and an idempotent outbox worker for the protected business action.

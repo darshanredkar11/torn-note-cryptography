@@ -81,7 +81,8 @@ public final class WebAuthnBoundAuthorizationService {
 
         NoteAuthorizationEnvelopeV1 envelope =
                 new NoteAuthorizationEnvelopeV1(transaction, manifest, note, identityPublicKey);
-        WebAuthnAssertionEngine.PreparedAssertion assertion = assertionEngine.start(transaction.subjectId());
+        WebAuthnAssertionEngine.PreparedAssertion assertion = assertionEngine.start(
+                WebAuthnIdentity.usernameFor(transaction.tenantId(), transaction.subjectId()));
 
         byte[] challengeIdBytes = new byte[32];
         random.nextBytes(challengeIdBytes);
@@ -148,7 +149,7 @@ public final class WebAuthnBoundAuthorizationService {
                     assertionEngine.finish(pending.assertionRequestJson(), assertionResponseJson);
             if (!assertion.success()) return reject(challengeId, "webauthn-assertion-invalid");
             if (!assertion.userVerified()) return reject(challengeId, "webauthn-user-verification-required");
-            if (!transaction.subjectId().equals(assertion.username()))
+            if (!WebAuthnIdentity.usernameFor(transaction.tenantId(), transaction.subjectId()).equals(assertion.username()))
                 return reject(challengeId, "webauthn-subject-mismatch");
 
             String spendKey = manifest.inventoryId() + ":"
