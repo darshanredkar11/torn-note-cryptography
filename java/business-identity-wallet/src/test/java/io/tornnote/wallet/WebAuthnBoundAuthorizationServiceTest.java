@@ -84,7 +84,7 @@ class WebAuthnBoundAuthorizationServiceTest {
         assertTrue(result.accepted(), result.reason());
         assertEquals("CONSUMED", store.stateOf(started.challengeId()));
         assertEquals(1, store.outboxSnapshot().size());
-        assertTrue(store.isSpent(inventory.manifest().inventoryId() + ":"
+        assertTrue(store.isSpent(tx.tenantId() + ":" + inventory.manifest().inventoryId() + ":"
                 + java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(walletNote.publicNote().noteId())));
     }
 

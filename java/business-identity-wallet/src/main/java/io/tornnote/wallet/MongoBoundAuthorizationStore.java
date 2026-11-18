@@ -173,8 +173,8 @@ public final class MongoBoundAuthorizationStore implements BoundAuthorizationSto
         return new PendingAssertion(doc.getString("_id"), doc.getString("assertionRequestJson"),
                 doc.getString("transactionId"), doc.getString("tenantId"), doc.getString("subjectId"),
                 doc.getString("sessionId"), doc.getString("audience"),
-                doc.get("transactionDigest", byte[].class),
-                doc.get("noteAuthorizationDigest", byte[].class), doc.getDate("expiresAt").toInstant());
+                MongoBytes.get(doc, "transactionDigest"),
+                MongoBytes.get(doc, "noteAuthorizationDigest"), doc.getDate("expiresAt").toInstant());
     }
 
     static boolean isDuplicateKey(Throwable error) {

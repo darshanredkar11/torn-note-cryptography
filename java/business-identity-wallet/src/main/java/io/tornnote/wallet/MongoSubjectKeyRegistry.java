@@ -57,7 +57,7 @@ public final class MongoSubjectKeyRegistry implements WebAuthnBoundAuthorization
         if (tenantId == null || subjectId == null || identityPublicKey == null) return false;
         Document record = keys.find(eq("_id", recordId(tenantId, subjectId, identityPublicKey))).first();
         return record != null && record.getBoolean("active", false)
-                && MessageDigest.isEqual(record.get("publicKeySpki", byte[].class), identityPublicKey.getEncoded());
+                && MessageDigest.isEqual(MongoBytes.get(record, "publicKeySpki"), identityPublicKey.getEncoded());
     }
 
     private static String recordId(String tenantId, String subjectId, PublicKey key) {

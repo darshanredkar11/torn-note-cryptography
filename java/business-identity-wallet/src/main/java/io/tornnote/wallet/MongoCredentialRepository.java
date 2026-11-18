@@ -216,7 +216,7 @@ public final class MongoCredentialRepository implements CredentialRepository {
         return RegisteredCredential.builder()
                 .credentialId(decodeBase64Url(doc.getString("_id")))
                 .userHandle(decodeBase64Url(doc.getString("userHandle")))
-                .publicKeyCose(new ByteArray(doc.get("publicKeyCose", byte[].class)))
+                .publicKeyCose(new ByteArray(MongoBytes.get(doc, "publicKeyCose")))
                 .signatureCount(doc.getLong("signatureCount") == null ? 0L : doc.getLong("signatureCount"))
                 .transports(toTransports(doc))
                 .backupEligible(doc.getBoolean("backupEligible"))

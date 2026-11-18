@@ -87,8 +87,8 @@ public final class MongoOutboxRepository {
         BoundAuthorizationStore.OutboxCommand command = new BoundAuthorizationStore.OutboxCommand(
                 doc.getString("_id"), doc.getString("transactionId"), doc.getString("tenantId"),
                 doc.getString("subjectId"), doc.getString("audience"), doc.getString("actionType"),
-                doc.getString("targetId"), doc.get("transactionDigest", byte[].class),
-                doc.get("canonicalTransaction", byte[].class), fields);
+                doc.getString("targetId"), MongoBytes.get(doc, "transactionDigest"),
+                MongoBytes.get(doc, "canonicalTransaction"), fields);
         return new LeasedCommand(command, doc.getInteger("attemptCount", 0),
                 doc.getString("leaseOwner"), doc.getDate("leaseUntil").toInstant());
     }
