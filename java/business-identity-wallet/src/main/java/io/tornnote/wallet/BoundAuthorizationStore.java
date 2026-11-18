@@ -22,7 +22,8 @@ import java.util.TreeMap;
  */
 public interface BoundAuthorizationStore {
     void create(PendingAssertion pending);
-    Optional<PendingAssertion> claim(String challengeId, Instant now);
+    Optional<PendingAssertion> claim(String challengeId, String tenantId, String subjectId,
+                                      String sessionId, Instant now);
     boolean commit(String challengeId, String spendKey, OutboxCommand command, Instant now);
     void invalidate(String challengeId, String reason);
 
@@ -32,6 +33,7 @@ public interface BoundAuthorizationStore {
             String transactionId,
             String tenantId,
             String subjectId,
+            String sessionId,
             String audience,
             byte[] transactionDigest,
             byte[] noteAuthorizationDigest,
@@ -42,6 +44,7 @@ public interface BoundAuthorizationStore {
             Objects.requireNonNull(transactionId, "transactionId");
             Objects.requireNonNull(tenantId, "tenantId");
             Objects.requireNonNull(subjectId, "subjectId");
+            Objects.requireNonNull(sessionId, "sessionId");
             Objects.requireNonNull(audience, "audience");
             Objects.requireNonNull(expiresAt, "expiresAt");
             if (transactionDigest == null || transactionDigest.length != 32)
@@ -108,9 +111,14 @@ public interface BoundAuthorizationStore {
                 throw new IllegalStateException("challenge-id-collision");
         }
 
-        @Override public synchronized Optional<PendingAssertion> claim(String challengeId, Instant now) {
+        @Override public synchronized Optional<PendingAssertion> claim(
+                String challengeId, String tenantId, String subjectId, String sessionId, Instant now) {
             Entry entry = challenges.get(challengeId);
             if (entry == null || entry.state != State.PENDING) return Optional.empty();
+            // A different authenticated session must not be able to burn a challenge.
+            if (!entry.pending.tenantId().equals(tenantId)
+                    || !entry.pending.subjectId().equals(subjectId)
+                    || !entry.pending.sessionId().equals(sessionId)) return Optional.empty();
             if (!now.isBefore(entry.pending.expiresAt())) {
                 entry.state = State.EXPIRED;
                 entry.reason = "challenge-expired";

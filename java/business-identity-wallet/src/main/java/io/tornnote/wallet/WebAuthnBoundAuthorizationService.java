@@ -61,7 +61,8 @@ public final class WebAuthnBoundAuthorizationService {
      * SubjectKeyRegistry must verify that the master identity public key is assigned
      * to the same tenant/subject used by the WebAuthn credential repository.
      */
-    public Started start(TransactionEnvelopeV1 transaction,
+    public Started start(RequestPrincipal principal,
+                         TransactionEnvelopeV1 transaction,
                          InventoryManifest manifest,
                          NoteInventoryIssuer.PublicNote note,
                          PublicKey identityPublicKey) throws Exception {
@@ -71,6 +72,10 @@ public final class WebAuthnBoundAuthorizationService {
         Objects.requireNonNull(identityPublicKey, "identityPublicKey");
         Instant now = clock.instant();
         if (!transaction.isValidAt(now)) throw new IllegalArgumentException("transaction-expired-or-not-yet-valid");
+        if (principal == null
+                || !transaction.tenantId().equals(principal.tenantId())
+                || !transaction.subjectId().equals(principal.subjectId()))
+            throw new SecurityException("authenticated-session-does-not-match-transaction");
         if (!subjectKeyRegistry.isAssigned(transaction.tenantId(), transaction.subjectId(), identityPublicKey))
             throw new SecurityException("identity-key-not-assigned-to-subject");
 
@@ -87,7 +92,7 @@ public final class WebAuthnBoundAuthorizationService {
 
         BoundAuthorizationStore.PendingAssertion pending = new BoundAuthorizationStore.PendingAssertion(
                 challengeId, assertion.assertionRequestJson(), transaction.transactionId(),
-                transaction.tenantId(), transaction.subjectId(), transaction.audience(),
+                transaction.tenantId(), transaction.subjectId(), principal.sessionId(), transaction.audience(),
                 transaction.digest(), envelope.digest(), expiresAt);
         store.create(pending);
 
@@ -101,14 +106,17 @@ public final class WebAuthnBoundAuthorizationService {
      * the protected business action into the outbox.
      */
     public Result finish(String challengeId,
+                         RequestPrincipal principal,
                          TransactionEnvelopeV1 transaction,
                          InventoryManifest manifest,
                          NoteInventoryIssuer.PublicNote note,
                          PublicKey identityPublicKey,
                          TornNote.SignatureSet noteSignatures,
                          String assertionResponseJson) {
+        if (principal == null) return Result.reject("authenticated-session-required");
         Instant now = clock.instant();
-        Optional<BoundAuthorizationStore.PendingAssertion> claimed = store.claim(challengeId, now);
+        Optional<BoundAuthorizationStore.PendingAssertion> claimed =
+                store.claim(challengeId, principal.tenantId(), principal.subjectId(), principal.sessionId(), now);
         if (claimed.isEmpty()) return Result.reject("challenge-not-pending-or-already-used");
 
         BoundAuthorizationStore.PendingAssertion pending = claimed.get();
@@ -116,6 +124,8 @@ public final class WebAuthnBoundAuthorizationService {
             if (transaction == null || manifest == null || note == null || identityPublicKey == null
                     || noteSignatures == null || assertionResponseJson == null)
                 return reject(challengeId, "authorization-input-missing");
+            if (!pending.sessionId().equals(principal.sessionId()))
+                return reject(challengeId, "authenticated-session-binding-mismatch");
 
             NoteAuthorizationEnvelopeV1 envelope =
                     new NoteAuthorizationEnvelopeV1(transaction, manifest, note, identityPublicKey);
@@ -161,6 +171,16 @@ public final class WebAuthnBoundAuthorizationService {
     private Result reject(String challengeId, String reason) {
         store.invalidate(challengeId, reason);
         return Result.reject(reason);
+    }
+
+    public record RequestPrincipal(String tenantId, String subjectId, String sessionId) {
+        public RequestPrincipal {
+            Objects.requireNonNull(tenantId, "tenantId");
+            Objects.requireNonNull(subjectId, "subjectId");
+            Objects.requireNonNull(sessionId, "sessionId");
+            if (tenantId.isBlank() || subjectId.isBlank() || sessionId.isBlank())
+                throw new IllegalArgumentException("principal-fields-must-be-nonblank");
+        }
     }
 
     public record Started(String challengeId, String credentialGetOptionsJson,

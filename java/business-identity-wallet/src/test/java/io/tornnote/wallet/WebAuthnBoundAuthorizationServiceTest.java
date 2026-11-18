@@ -21,6 +21,8 @@ class WebAuthnBoundAuthorizationServiceTest {
     private static final Clock CLOCK = Clock.fixed(NOW, ZoneOffset.UTC);
     private static final Instant ISSUED = NOW.minusSeconds(5);
     private static final Instant EXPIRES = NOW.plusSeconds(300);
+    private static final WebAuthnBoundAuthorizationService.RequestPrincipal PRINCIPAL =
+            new WebAuthnBoundAuthorizationService.RequestPrincipal("tenant-001", "subject-001", "sid-001");
 
     private static final class FakeAssertionEngine implements WebAuthnAssertionEngine {
         private final VerifiedAssertion result;
@@ -72,11 +74,11 @@ class WebAuthnBoundAuthorizationServiceTest {
                 new WebAuthnAssertionEngine.VerifiedAssertion(true, true, "subject-001", "credential-id", 8)),
                 store, issuer);
 
-        var started = service.start(tx, inventory.manifest(), walletNote.publicNote(), identity.pair().getPublic());
+        var started = service.start(PRINCIPAL, tx, inventory.manifest(), walletNote.publicNote(), identity.pair().getPublic());
         assertEquals(java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(noteEnvelope.digest()),
                 started.noteAuthorizationDigestBase64Url());
 
-        var result = service.finish(started.challengeId(), tx, inventory.manifest(), walletNote.publicNote(),
+        var result = service.finish(started.challengeId(), PRINCIPAL, tx, inventory.manifest(), walletNote.publicNote(),
                 identity.pair().getPublic(), signatures, "{\"type\":\"webauthn.get\"}");
 
         assertTrue(result.accepted(), result.reason());
@@ -101,8 +103,8 @@ class WebAuthnBoundAuthorizationServiceTest {
                 new WebAuthnAssertionEngine.VerifiedAssertion(true, false, "subject-001", "credential-id", 1)),
                 store, issuer);
 
-        var started = service.start(tx, inventory.manifest(), walletNote.publicNote(), identity.pair().getPublic());
-        var result = service.finish(started.challengeId(), tx, inventory.manifest(), walletNote.publicNote(),
+        var started = service.start(PRINCIPAL, tx, inventory.manifest(), walletNote.publicNote(), identity.pair().getPublic());
+        var result = service.finish(started.challengeId(), PRINCIPAL, tx, inventory.manifest(), walletNote.publicNote(),
                 identity.pair().getPublic(), signatures, "{\"fake\":true}");
 
         assertFalse(result.accepted());
@@ -126,13 +128,13 @@ class WebAuthnBoundAuthorizationServiceTest {
                 new WebAuthnAssertionEngine.VerifiedAssertion(true, true, "subject-001", "credential-id", 1)),
                 store, issuer);
 
-        var started = service.start(tx, inventory.manifest(), walletNote.publicNote(), identity.pair().getPublic());
+        var started = service.start(PRINCIPAL, tx, inventory.manifest(), walletNote.publicNote(), identity.pair().getPublic());
         var changed = new TransactionEnvelopeV1(tx.transactionId(), tx.tenantId(), tx.subjectId(),
                 tx.audience(), tx.actionType(), tx.targetId(), tx.resourceVersion(), tx.policyVersion(),
                 Map.of("amount_minor", "850001", "currency", "INR", "beneficiary_account", "XX-4821"),
                 tx.nonce(), tx.issuedAt(), tx.expiresAt());
 
-        var result = service.finish(started.challengeId(), changed, inventory.manifest(),
+        var result = service.finish(started.challengeId(), PRINCIPAL, changed, inventory.manifest(),
                 walletNote.publicNote(), identity.pair().getPublic(), signatures, "{\"fake\":true}");
         assertFalse(result.accepted());
         assertEquals("transaction-or-note-binding-mismatch", result.reason());
@@ -154,12 +156,41 @@ class WebAuthnBoundAuthorizationServiceTest {
         var service = service(new FakeAssertionEngine(
                 new WebAuthnAssertionEngine.VerifiedAssertion(true, true, "somebody-else", "credential-id", 1)),
                 store, issuer);
-        var started = service.start(tx, inventory.manifest(), walletNote.publicNote(), identity.pair().getPublic());
+        var started = service.start(PRINCIPAL, tx, inventory.manifest(), walletNote.publicNote(), identity.pair().getPublic());
 
-        var result = service.finish(started.challengeId(), tx, inventory.manifest(), walletNote.publicNote(),
+        var result = service.finish(started.challengeId(), PRINCIPAL, tx, inventory.manifest(), walletNote.publicNote(),
                 identity.pair().getPublic(), signatures, "{\"fake\":true}");
         assertFalse(result.accepted());
         assertEquals("webauthn-subject-mismatch", result.reason());
+    }
+
+    @Test
+    void anotherSessionCannotClaimOrBurnThePendingChallenge() throws Exception {
+        NoteInventoryIssuer issuer = NoteInventoryIssuer.create();
+        var inventory = issuer.issue("webauthn-session-binding", 1);
+        var walletNote = inventory.walletCredentials().get(0);
+        var identity = TornNote.keys("ed25519");
+        var tx = transaction();
+        var store = new BoundAuthorizationStore.InMemory();
+        var service = service(new FakeAssertionEngine(
+                new WebAuthnAssertionEngine.VerifiedAssertion(true, true, "subject-001", "credential-id", 1)),
+                store, issuer);
+        var started = service.start(PRINCIPAL, tx, inventory.manifest(),
+                walletNote.publicNote(), identity.pair().getPublic());
+
+        var wrongPrincipal = new WebAuthnBoundAuthorizationService.RequestPrincipal(
+                "tenant-001", "subject-001", "different-session");
+        var stolenIdAttempt = service.finish(started.challengeId(), wrongPrincipal, tx, inventory.manifest(),
+                walletNote.publicNote(), identity.pair().getPublic(), null, "{}");
+        assertFalse(stolenIdAttempt.accepted());
+        assertEquals("PENDING", store.stateOf(started.challengeId()));
+
+        var envelope = new NoteAuthorizationEnvelopeV1(tx, inventory.manifest(),
+                walletNote.publicNote(), identity.pair().getPublic());
+        var signatures = walletNote.authorizeBound(identity, inventory.manifest(), envelope);
+        var legitimate = service.finish(started.challengeId(), PRINCIPAL, tx, inventory.manifest(),
+                walletNote.publicNote(), identity.pair().getPublic(), signatures, "{}");
+        assertTrue(legitimate.accepted(), legitimate.reason());
     }
 
     @Test
@@ -168,7 +199,7 @@ class WebAuthnBoundAuthorizationServiceTest {
         byte[] txDigest = new byte[32];
         byte[] noteDigest = new byte[32];
         var pending = new BoundAuthorizationStore.PendingAssertion("challenge-1", "request", "tx",
-                "tenant", "subject", "audience", txDigest, noteDigest, NOW.plusSeconds(30));
+                "tenant", "subject", "sid", "audience", txDigest, noteDigest, NOW.plusSeconds(30));
         store.create(pending);
         var ready = new CountDownLatch(10);
         var start = new CountDownLatch(1);
@@ -179,7 +210,7 @@ class WebAuthnBoundAuthorizationServiceTest {
                 ready.countDown();
                 try {
                     start.await();
-                    if (store.claim("challenge-1", NOW).isPresent()) claims.incrementAndGet();
+                    if (store.claim("challenge-1", "tenant", "subject", "sid", NOW).isPresent()) claims.incrementAndGet();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }

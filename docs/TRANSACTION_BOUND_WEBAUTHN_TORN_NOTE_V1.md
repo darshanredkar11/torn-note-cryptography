@@ -63,15 +63,15 @@ When starting the WebAuthn assertion, persist a pending record containing:
 - hash of the raw WebAuthn challenge;
 - the relying-party assertion request/options needed by the chosen WebAuthn library;
 - transaction ID, `H_tx` and `D_note`;
-- tenant, subject, audience, RP ID and exact allowed origins;
+- tenant, subject, audience and the initiating authenticated session identifier (stable `sid` claim), RP ID and exact allowed origins;
 - expected credential/subject association and required UV policy;
 - creation time, expiry and one-time state.
 
 This server-side association binds the WebAuthn assertion to both the transaction and selected note. Binding only `H_tx` is insufficient: two different notes could otherwise be spliced onto the same transaction.
 
-The challenge is single-use. The relying party must check the exact challenge, `clientDataJSON.type`, exact origin, RP ID hash, credential-to-subject mapping, assertion signature, UP and required UV. Use a maintained WebAuthn server library; do not hand-parse and reimplement WebAuthn signature verification.
+The step-up endpoint must require the existing authenticated session on both start and finish. Bind the pending record to the tenant, subject and stable session identifier (not a short-lived access-token ID), and reject a challenge claim from any other session without consuming it. The challenge is single-use. The relying party must check the exact challenge, `clientDataJSON.type`, exact origin, RP ID hash, credential-to-subject mapping, assertion signature, UP and required UV. Use a maintained WebAuthn server library; do not hand-parse and reimplement WebAuthn signature verification.
 
-The protocol kernel in this milestone does not yet implement the WebAuthn registration/assertion adapter. The next implementation step is the Yubico Java WebAuthn server integration, with a persistent credential repository and durable challenge store.
+The passwordless account-login and credential-registration endpoints are not yet implemented in this milestone. This is the transaction-bound step-up ceremony for users who already have a registered passkey. The next implementation step is the Yubico Java WebAuthn server integration, with a persistent credential repository and durable challenge store.
 
 ## 4. Verification and atomic commit
 
@@ -118,7 +118,7 @@ This profile does not replace WebAuthn passwordless login, modify authenticator 
 
 ## 8. Step-up orchestration implementation
 
-The Java module includes `YubicoWebAuthnAssertionEngine`, which creates a relying-party assertion request with `UserVerificationRequirement.REQUIRED`, persists the complete `AssertionRequest` JSON for later verification, and delegates response validation to Yubico's `RelyingParty.finishAssertion`. The application supplies its own `CredentialRepository`, RP ID, exact origin allowlist and credential-state updater.
+The Java module includes `YubicoWebAuthnAssertionEngine`, which creates a relying-party assertion request with `UserVerificationRequirement.REQUIRED`, persists the complete `AssertionRequest` JSON for later verification, and delegates response validation to Yubico's `RelyingParty.finishAssertion`. The application supplies its own `CredentialRepository`, RP ID, exact origin allowlist and credential-state updater. The step-up service also requires the authenticated tenant, subject and stable session ID on both start and finish; an unrelated session cannot burn a pending challenge.
 
 `WebAuthnBoundAuthorizationService` stores the pending request together with `H_tx`, `D_note`, tenant, subject, audience and expiry. On completion it claims the challenge once, recomputes the note envelope, verifies Torn Note signatures, verifies the WebAuthn assertion and user-verification result, checks the assertion username against the bound subject, then invokes the atomic store commit.
 
