@@ -104,3 +104,21 @@ This document does not claim that:
 A future implementation can use a SNARK-friendly stack such as BN254 plus BabyJubjub plus Poseidon, or BLS12-381 plus Jubjub plus Poseidon.
 
 The concrete stack should be benchmarked and security-reviewed before protocol parameters are frozen.
+
+## Executable reference-model encoding (not yet the circuit suite)
+
+The Node.js reference model now uses an explicit, length-prefixed SHA-256 encoding. Every hash part is encoded as:
+
+`uint32_be(byte_length) || bytes`
+
+The domains are distinct for leaves, Merkle internal nodes, nullifier-key derivation, nullifier derivation, and transaction digests:
+
+- `TORN-LEAF/v2`
+- `TORN-MERKLE-NODE/v2`
+- `TORN-NULLIFIER-KEY/v2`
+- `TORN-NULLIFIER/v2`
+- `TORN-TX/v2`
+
+The reference transaction encoder recursively sorts object keys and rejects unsupported values such as undefined fields, accessors, cycles, sparse arrays, non-finite numbers, and unsafe integers. The reference relation checks that each private P-256 scalar derives the corresponding committed compressed public point, verifies membership, recomputes the nullifier, and recomputes the digest of the exact canonical transaction.
+
+**Important interoperability boundary:** this Node.js model uses SHA-256 and P-256, while the experimental Circom circuit currently uses Poseidon and BabyJubjub. They are separate implementations of the research intent, not currently byte-for-byte or algebraically interchangeable protocol implementations. Do not treat a passing reference-model test as evidence that the Circom circuit proves the same suite. A single normative suite and shared cross-implementation vectors are still required.
