@@ -97,7 +97,7 @@ export function StoryExperience() {
         <div className="story-container story-hero-inner">
           <motion.div className="story-hero-copy" data-sc-in initial="hidden" animate="visible" variants={rise}>
             <div className="story-eyebrow"><span className="pulse-dot" /> A NEW WAY TO THINK ABOUT AUTHORIZATION</div>
-            <h1>Not just <em>who</em> you are.<br/>But <span>what you're allowed to do.</span></h1>
+            <h1>Authority should be<br/><em>as specific as the action.</em></h1>
             <p>Logging in proves your identity. But should a login alone be enough to change a supplier's bank account, move money, or grant someone administrator access?</p>
             <p className="story-hero-answer">Torn Note explores a better way to authorize high-impact actions: with a specific, verifiable capability that can be used only once.</p>
             <a className="story-primary-link" href="#problem">See why it matters <ArrowDown size={16}/></a>
@@ -108,7 +108,7 @@ export function StoryExperience() {
       </section>
 
       <section className="story-problem" id="problem" data-sc-act="flow" data-sc-drift="#e9e3d8">
-        <div className="story-container problem-grid">
+        <div className="story-container problem-grid" data-sc-in>
           <motion.div className="problem-copy" data-sc-reveal="left" variants={rise} initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <div className="story-eyebrow">THE EVERYDAY PROBLEM</div>
             <h2>A familiar request.<br/><span>A very expensive mistake.</span></h2>
@@ -130,7 +130,7 @@ export function StoryExperience() {
 
 
       <section className="business-decision" id="decision" data-sc-act="flow" data-sc-drift="#e1d9ce">
-        <div className="story-container business-decision-grid">
+        <div className="story-container business-decision-grid" data-sc-in>
           <div className="business-decision-copy" data-sc-reveal="left">
             <div className="story-eyebrow">A SIMPLE BUSINESS EXAMPLE</div>
             <h2>Would you approve this bank-account change?</h2>
@@ -170,7 +170,7 @@ export function StoryExperience() {
             <div className="idea-callout callout-one">Limited inventory</div><div className="idea-callout callout-two">Verifiable origin</div><div className="idea-callout callout-three">Consumed on use</div>
           </div>
         </div>
-        <div className="story-container idea-footnote"><span>THE IMPORTANT DIFFERENCE</span><p>It's not simply a token with an expiry date. The research explores issuer-committed note inventory, independent proof factors, transaction binding and one-time consumption working together.</p></div>
+        <div className="story-container idea-footnote" data-sc-reveal="up"><span>THE IMPORTANT DIFFERENCE</span><p>It's not simply a token with an expiry date. The research explores issuer-committed note inventory, independent proof factors, transaction binding and one-time consumption working together.</p></div>
       </section>
 
       <section className="story-how" id="how" data-sc-act="flow" data-sc-drift="#e9e3d8">
@@ -225,7 +225,7 @@ export function StoryExperience() {
             <div className="identity-outcome"><CheckCircle2 size={19}/> Independent evidence for one consequential decision</div>
           </div>
         </div>
-        <div className="story-container identity-note">In the Java reference integration, a WebAuthn assertion is validated separately and the server binds the pending passkey request to the same transaction and Torn Note authorization context. The browser showcase here is illustrative; it does not run a live passkey ceremony.</div>
+        <div className="story-container identity-note" data-sc-reveal="up">In the Java reference integration, a WebAuthn assertion is validated separately and the server binds the pending passkey request to the same transaction and Torn Note authorization context. The browser showcase here is illustrative; it does not run a live passkey ceremony.</div>
       </section>
 
       <section className="story-benefits" data-sc-act="flow" data-sc-drift="#e9e3d8">
