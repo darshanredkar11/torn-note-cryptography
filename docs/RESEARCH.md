@@ -29,7 +29,7 @@ The work is motivated by high-impact actions such as payouts and beneficiary cha
 
 ### 1.1 Research question
 
-> Does issuer-committed, finite authorization inventory provide a meaningful, falsifiable security property—particularly offline-verifiable inventory bounds—over well-engineered conventional authorization systems, and is that property worth the additional operational complexity?
+> Does issuer-committed, finite authorization inventory provide a meaningful, falsifiable security property—particularly offline-verifiable per-manifest inventory membership and issuance bounds, combined with online atomic spend enforcement—over well-engineered conventional authorization systems, and is that property worth the additional operational complexity?
 
 ### 1.2 Contributions and scope
 
@@ -68,8 +68,8 @@ The adversary is not assumed to compromise the issuer's manifest-signing key or 
 
 - **P1 — Exact action binding:** An authorization for transaction digest D cannot be accepted for a distinct digest D′.
 - **P2 — Atomic single-use consumption:** A note/nullifier is accepted at most once, including concurrent requests and restart/recovery, provided the verifier's spend store is durable and atomic.
-- **P3 — Inventory membership:** Without compromising the issuer's manifest key, an attacker cannot prove membership for an authorization object outside the committed set.
-- **P4 — Bounded issuance under compromise:** Under a precisely specified compromise of the runtime/hot signer but not the issuer commitment key or independent note factors, unauthorized issuance outside the committed batch should fail. The scope and assumptions must be explicit; inventory bounds alone do not necessarily prevent compromise from spending already-issued notes.
+- **P3 — Per-manifest inventory membership:** Without compromising the issuer's manifest key, an attacker cannot prove membership for an authorization object outside that manifest's committed set.
+- **P4 — Per-batch issuance bound under compromise:** Under a precisely specified compromise of the runtime/hot signer but not the issuer commitment key or required note factors, the attacker should not be able to create a new valid note outside the committed batch. This is a per-manifest bound of N leaves, not automatically a global merchant-wide quota across multiple manifests. Global quotas require issuer policy and, where relevant, shared accounting. This property does not prevent a compromised holder from spending valid notes already in its possession.
 - **P5 — Optional privacy:** A future ZK construction may hide note identity while revealing only a commitment/root, a nullifier, transaction digest, and proof. This is a research goal, not a current implementation claim.
 
 ### 2.4 Non-goals
@@ -80,13 +80,16 @@ Torn Note does not inherently prevent business email compromise, social engineer
 
 ### 3.1 Batch issuance
 
-For each note i, the issuer creates a unique identifier noteId_i and note-specific public keys pkA_i and pkB_i with corresponding private signing keys skA_i and skB_i. A leaf commits to a domain-separated encoding of the note identifier and public keys:
+For each note i, the issuer creates a unique identifier noteId_i and note-specific public keys pkA_i and pkB_i with corresponding private signing keys skA_i and skB_i. A leaf commits to a canonical encoding of the note identifier and public keys. A recommended domain-separated construction is:
 
-    L_i = H("TORN-NOTE/leaf/v1" || Encode(noteId_i, pkA_i, pkB_i))
+    L_i = SHA-256(0x00 || CanonicalEncode(noteId_i, pkA_i, pkB_i))
+    N(left, right) = SHA-256(0x01 || left || right)
 
-The issuer builds a Merkle tree over the leaves and obtains root R. A signed manifest M includes at minimum protocol/version identifiers, batch identifier, root, inventory size, issuer identity/key identifier, and validity information. The issuer signs M. The verifier is provisioned with the trusted issuer public key and validates the manifest.
+The distinct prefixes separate leaf hashing from internal-node hashing. The normative profile must also fix tree shape, leaf ordering, proof direction encoding, and odd-leaf handling; the leaf count N must be authenticated so that membership is interpreted against one unambiguous tree.
 
-Encoding must be unambiguous and canonical. The expression above is illustrative; the exact encoding and domain-separation scheme must be normative before interoperability claims.
+The issuer builds the Merkle tree over the N leaves and obtains root R. The signed manifest M should include protocol and version identifiers, batch_id, root R, leaf_count N, issuer identity and key identifier, algorithm identifiers, validity interval, authorization scope/policy identifier, and the exact manifest serialization profile. The issuer signs the canonical manifest bytes under a domain-separated manifest-signing context. The verifier is provisioned with the trusted issuer public key and validates both the signature and manifest policy.
+
+This construction is a specification proposal, not a claim that every current prototype module already uses this exact encoding. The implementation profile and test vectors must be frozen before cross-language interoperability or conformance claims.
 
 ### 3.2 Transaction binding
 
@@ -106,13 +109,13 @@ Illustrative fields include:
 
     D_tx = SHA-256(Domain || CanonicalEncode(TransactionSnapshot))
 
-The canonical encoding must specify field names, ordering, type representation, length-prefixing, Unicode rules, numeric range and currency representation. The exact final field set is to be defined by the integration contract; fields should be included only if they are security-relevant and available authoritatively.
+The canonical encoding must specify field names, ordering, type representation, length-prefixing, Unicode normalization/handling, absent versus null fields, integer ranges, and currency representation. The integration must choose exactly one deterministic serialization profile per protocol version—for example, RFC 8785 JCS or RFC 8949 core deterministic CBOR—and publish byte-for-byte vectors. JCS requires its JSON/I-JSON numeric constraints to be respected; monetary amounts should use bounded integer minor units. Do not silently accept alternate encodings for the same version. The exact final field set is to be defined by the integration contract; fields should be included only if they are security-relevant and available authoritatively.
 
 ### 3.3 Authorization
 
 The holder provides the note identifier, public note factors, manifest, Merkle path, and independent signatures. The signature message must bind the digest, note identifier, batch identifier, and protocol domain/version.
 
-The current prototype's semantics are three independent signatures—master identity, Half A, and Half B. The proposed Hyperswitch experiment uses a Torn Note verifier over the final transaction snapshot and committed inventory. It must not be described as a threshold signature, FROST, or secret reconstruction.
+The current prototype's semantics are **three independent Ed25519 signatures**—master identity, Half A, and Half B—and all three are required. The two note-specific factors are a 2-of-2 pair; the complete authorization policy is 3-of-3. Ed25519 has no native aggregate or threshold multisignature operation. Key independence must be supported by separate generation and appropriate custody, not just by assigning different labels to keys. The proposed Hyperswitch experiment uses a Torn Note verifier over the final transaction snapshot and committed inventory. It must not be described as FROST or secret reconstruction.
 
 ### 3.4 Verification and spend
 
@@ -125,17 +128,26 @@ Before execution, the verifier:
 5. Atomically consumes the note identifier/nullifier in durable storage.
 6. Allows execution only if verification and consumption succeed.
 
-Atomic consumption must be coordinated with payout idempotency and failure handling. The system design must define what happens if spend reservation succeeds but connector execution fails, and how retry behavior avoids both double-spend and loss of legitimate authorization.
+In the core mode, the spend uniqueness scope should identify the issuer/batch and note (for example, a unique key over issuer_id, batch_id, note_id). In ZK mode, use the corresponding issuer/batch scope and note-level nullifier. A note must not be reissued across batches unless the nullifier design explicitly prevents cross-batch reuse.
+
+Atomic consumption must be coordinated with payout idempotency and failure handling. A database transaction can atomically record the note spend, the logical payout transition, and an outbox event. A worker can then dispatch the outbox event using a stable connector idempotency key. This normally provides durable at-least-once delivery; exactly-once external effects cannot be claimed unless the downstream connector honors the idempotency contract. A crash after recording the spend but before delivery should be recovered by retrying the same outbox event, not by freeing the note for a different payout.
 
 ## 4. Optional zero-knowledge direction
 
-A privacy-oriented extension would replace the public note identifier and membership path with a proof of membership and a deterministic nullifier. The intended public statement could contain a batch root R, nullifier η, transaction digest D_tx, and proof π. The witness could contain note secrets, note identifier, commitment randomness, and membership path.
+A privacy-oriented extension would replace the public note identifier and membership path with a proof of membership and a **note-level deterministic nullifier**. The public statement could contain a batch root R, batch identifier, nullifier η, independently recomputed transaction digest D_tx, and proof π. The witness could contain note secrets, note identifier, commitment randomness, and membership path.
 
-A candidate construction may use a SNARK-friendly hash and curve, such as Poseidon over BN254/BabyJubjub. The exact circuit, nullifier derivation, domain separation, proof system, setup assumptions, and security analysis are not frozen.
+The nullifier must not include the transaction digest. If it did, the same note would derive a different nullifier for each transaction and could be spent more than once under different transaction digests. A candidate note-level construction is:
+
+    K_N = Poseidon(DOMAIN_NULLIFIER_KEY, secret_1, secret_2, ...)
+    η_i = Poseidon(DOMAIN_NULLIFIER, K_N, noteId_i, batch_id)
+
+Here, batch_id is the immutable issuance scope for that note; D_tx is a separate public input to the proof and is checked against the verifier's authoritative transaction. The circuit proves that the note belongs to R, that η_i is correctly derived, and that the authorization relation binds the proof to D_tx. The verifier records η_i as spent. If a note could be reissued into another batch, including batch_id would produce a different nullifier; the issuer must therefore guarantee one-batch-only note issuance or use a globally stable note scope that prevents cross-batch reuse.
+
+A candidate proving stack may use a SNARK-friendly hash and curve, such as Poseidon over BN254 with BabyJubjub-based points/signatures. BabyJubjub is a curve, not a signature scheme; the concrete signature construction (if any), proof system, setup assumptions, domain separation, and security analysis must be specified. The exact circuit profile is not frozen.
 
 **Interoperability caveat:** the Node.js reference model currently uses length-prefixed SHA-256 and P-256, while the experimental Circom circuit uses Poseidon and BabyJubjub. These are separate research implementations; no byte-for-byte or relation-equivalence claim is made. A normative suite and cross-implementation vectors are required before claiming circuit equivalence.
 
-The current work does not claim production zero-knowledge proofs, unlinkability, or anonymity. Even a proof that hides the leaf may leak through batch size, root reuse, transaction metadata, issuance patterns, or application/network identifiers.
+The current work does not claim production zero-knowledge proofs, unlinkability, or anonymity. A proof may hide the leaf index, note identifier, and note public keys, but the verifier still observes at least the batch identifier/root, nullifier, transaction digest, and timing. Privacy depends on the actual anonymity set of eligible notes and can be reduced by batch size, root reuse, issuance patterns, transaction metadata, and application/network identifiers. No formal anonymity definition or measured anonymity set is claimed.
 
 ## 5. Related constructions and comparison
 
@@ -152,7 +164,11 @@ The evaluation will compare against:
 
 Strong baselines must not be deliberately weakened. A capability system can also include a signed finite quota, issuer commitment, membership proof, and nullifier/spend table. If it matches Torn Note's property, that equivalence is part of the result.
 
-Privacy-oriented token systems (including Privacy Pass), WebAuthn, OAuth Rich Authorization Requests, macaroons, and Biscuit are relevant but differ in threat models, issuance/delegation, privacy goals, and transaction semantics. The final related-work section must be based on primary specifications and literature, and must avoid categorical claims based only on the table above.
+Privacy-oriented token systems (including Privacy Pass), WebAuthn, OAuth Rich Authorization Requests, macaroons, and Biscuit are relevant but differ in threat models, issuance/delegation, privacy goals, and transaction semantics. Privacy Pass is an architecture with multiple issuance and redemption components; its architecture specifies blindness/input secrecy and one-more-forgery security requirements for issuance protocols, but the paper should not imply that every Privacy Pass variant uses one identical blind-signature mechanism. See [RFC 9576](https://www.rfc-editor.org/rfc/rfc9576.html), [RFC 9577](https://www.rfc-editor.org/rfc/rfc9577.html), and [RFC 9578](https://www.rfc-editor.org/rfc/rfc9578.html).
+
+WebAuthn assertions bind a credential signature to a server-provided challenge. Replay resistance depends on the relying party verifying the expected challenge and managing its lifecycle; WebAuthn itself is not a durable atomic spend ledger. The comparison should distinguish challenge replay checking from an application-level one-time spend transition.
+
+The final related-work section must be based on primary specifications and literature, and must avoid categorical claims based only on the table above.
 
 ## 6. Proposed evaluation: Hyperswitch payout lab
 
