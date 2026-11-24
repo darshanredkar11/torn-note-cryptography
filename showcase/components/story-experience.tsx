@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Script from "next/script";
 import { AnimatePresence, motion } from "motion/react";
 import {
   ArrowDown, ArrowRight, ArrowUpRight, Check, CheckCircle2, Fingerprint,
@@ -83,16 +84,18 @@ export function StoryExperience() {
 
   return (
     <main className="story-site">
+      <span data-sc-progress aria-hidden="true" />
+      <div className="sc-grain" aria-hidden="true" />
       <header className="story-header">
         <a href="#" className="story-brand"><span className="story-brand-mark"><NoteGlyph small /></span><span>TORN <i>NOTE</i></span></a>
         <nav><a href="#how">How it works</a><a href="identity-wallet/">Identity Wallet</a><a href="#protection">What it protects</a><a href="#research">Research</a></nav><details className="story-mobile-menu"><summary>Explore</summary><div><a href="#how">How it works</a><a href="identity-wallet/">Identity Wallet</a><a href="#protection">What it protects</a><a href="#research">Research</a></div></details>
         <a className="story-github" href="https://github.com/darshanredkar11/torn-note-cryptography" target="_blank" rel="noreferrer">View research <ArrowUpRight size={14}/></a>
       </header>
 
-      <section className="story-hero">
+      <section className="story-hero" data-sc-act="flow" data-sc-drift="#e9e3d8">
         <div className="story-hero-grid" />
         <div className="story-container story-hero-inner">
-          <motion.div className="story-hero-copy" initial="hidden" animate="visible" variants={rise}>
+          <motion.div className="story-hero-copy" data-sc-in initial="hidden" animate="visible" variants={rise}>
             <div className="story-eyebrow"><span className="pulse-dot" /> A NEW WAY TO THINK ABOUT AUTHORIZATION</div>
             <h1>Not just <em>who</em> you are.<br/>But <span>what you're allowed to do.</span></h1>
             <p>Logging in proves your identity. But should a login alone be enough to change a supplier's bank account, move money, or grant someone administrator access?</p>
@@ -104,15 +107,15 @@ export function StoryExperience() {
         <div className="story-scroll-hint">SCROLL TO UNFOLD THE IDEA <span /></div>
       </section>
 
-      <section className="story-problem" id="problem">
+      <section className="story-problem" id="problem" data-sc-act="flow" data-sc-drift="#e9e3d8">
         <div className="story-container problem-grid">
-          <motion.div className="problem-copy" variants={rise} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+          <motion.div className="problem-copy" data-sc-reveal="left" variants={rise} initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <div className="story-eyebrow">THE EVERYDAY PROBLEM</div>
             <h2>A familiar request.<br/><span>A very expensive mistake.</span></h2>
             <p>Your finance team receives an email from a known supplier. Their bank details have changed. The employee is legitimate. The login is legitimate. But is the requested change legitimate?</p>
             <div className="problem-quote"><span>INCOMING REQUEST</span><strong>“We've changed our bank account. Please update the details before the next payment.”</strong><small>Northstar Components · Supplier email</small></div>
           </motion.div>
-          <motion.div className="fraud-scene" initial={{ opacity: 0, x: 35 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: .8 }}>
+          <motion.div className="fraud-scene" data-sc-reveal="right" initial={{ opacity: 0, x: 35 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: .8 }}>
             <div className="fraud-scene-head"><span>PAYMENT WORKFLOW</span><span className="fraud-risk"><i/> RISK SCENARIO</span></div>
             <div className="fraud-flow">
               <div className="fraud-actor"><div className="actor-avatar">FC</div><span>Finance team</span><small>Authenticated employee</small></div>
@@ -126,15 +129,15 @@ export function StoryExperience() {
       </section>
 
 
-      <section className="business-decision" id="decision">
+      <section className="business-decision" id="decision" data-sc-act="flow" data-sc-drift="#e1d9ce">
         <div className="story-container business-decision-grid">
-          <div className="business-decision-copy">
+          <div className="business-decision-copy" data-sc-reveal="left">
             <div className="story-eyebrow">A SIMPLE BUSINESS EXAMPLE</div>
             <h2>Would you approve this bank-account change?</h2>
             <p>A supplier asks your finance team to replace its payment account. The employee is signed in, but the request itself could still be fraudulent.</p>
             <div className="decision-request"><span>CHANGE REQUEST</span><strong>Northstar Components</strong><small>Replace account ending 4821 before the next payment run</small></div>
           </div>
-          <div className="business-decision-demo">
+          <div className="business-decision-demo" data-sc-reveal="right">
             <div className="decision-question">What should the finance system do?</div>
             <div className="decision-choices" role="group" aria-label="Choose how to handle the supplier bank change">
               <button type="button" className={businessChoice === "approve" ? "selected" : ""} onClick={() => setBusinessChoice("approve")}>Approve because the employee is logged in</button>
@@ -150,14 +153,14 @@ export function StoryExperience() {
           </div>
         </div>
       </section>
-      <section className="story-idea">
+      <section className="story-idea" data-sc-act="flow" data-sc-drift="#e9e3d8">
         <div className="story-container idea-inner">
-          <motion.div className="idea-intro" variants={rise} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+          <motion.div className="idea-intro" data-sc-in variants={rise} initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <div className="story-eyebrow">THE IDEA, WITHOUT THE JARGON</div>
             <h2>Think of a Torn Note as a <span>secure, single-use pass.</span></h2>
             <p>Imagine a business issues a limited batch of special passes. Each pass represents a bounded authorization. It can be checked against what the issuer created, tied to a particular action, and consumed when accepted.</p>
           </motion.div>
-          <div className="idea-note-stage">
+          <div className="idea-note-stage" data-sc-reveal="up">
             <motion.div className="idea-note-card" initial={{ opacity: 0, y: 30, rotate: -8 }} whileInView={{ opacity: 1, y: 0, rotate: 3 }} viewport={{ once: true }} transition={{ type: "spring", stiffness: 80, damping: 15 }}>
               <NoteGlyph/>
               <div className="idea-note-copy"><span>TORN NOTE · CONCEPT</span><strong>ONE ACTION.<br/>ONE AUTHORIZATION.</strong><small>Issued by a trusted authority</small></div>
@@ -170,25 +173,25 @@ export function StoryExperience() {
         <div className="story-container idea-footnote"><span>THE IMPORTANT DIFFERENCE</span><p>It's not simply a token with an expiry date. The research explores issuer-committed note inventory, independent proof factors, transaction binding and one-time consumption working together.</p></div>
       </section>
 
-      <section className="story-how" id="how">
+      <section className="story-how" id="how" data-sc-act="flow" data-sc-drift="#e9e3d8">
         <div className="story-container">
-          <div className="story-section-heading">
+          <div className="story-section-heading" data-sc-in>
             <div className="story-eyebrow">FOLLOW THE NOTE</div>
             <h2>From creation to <span>one-time approval.</span></h2>
             <p>Four moments. One simple story. Scroll through how the authorization is intended to work.</p>
           </div>
-          <div className="story-steps">{stages.map((stage, index) => <StoryStep key={stage.number} stage={stage} index={index}/>)}</div>
+          <div className="story-steps" data-sc-reveal="up">{stages.map((stage, index) => <StoryStep key={stage.number} stage={stage} index={index}/>)}</div>
         </div>
       </section>
 
-      <section className="story-protection" id="protection">
+      <section className="story-protection" id="protection" data-sc-act="flow" data-sc-drift="#e9e3d8">
         <div className="story-container">
           <div className="story-section-heading">
             <div className="story-eyebrow">LET'S TRY TO BREAK IT</div>
             <h2>What if someone <span>tries something sneaky?</span></h2>
             <p>Choose an attack. See which check is designed to stop it.</p>
           </div>
-          <div className="attack-lab">
+          <div className="attack-lab" data-sc-reveal="up">
             <div className="attack-options">
               {attacks.map((item) => <button key={item.id} onClick={() => setAttack(item.id)} className={attack === item.id ? "attack-option selected" : "attack-option"}><span>{item.id === "replay" ? "01" : item.id === "change" ? "02" : "03"}</span>{item.title}<ArrowRight size={15}/></button>)}
             </div>
@@ -208,8 +211,8 @@ export function StoryExperience() {
         </div>
       </section>
 
-      <section className="story-identity">
-        <div className="story-container identity-grid">
+      <section className="story-identity" data-sc-act="flow" data-sc-drift="#e9e3d8">
+        <div className="story-container identity-grid" data-sc-in>
           <div>
             <div className="story-eyebrow">AND WHAT ABOUT PASSKEYS?</div>
             <h2>Keep the passkey.<br/><span>Give the action its own proof.</span></h2>
@@ -225,10 +228,10 @@ export function StoryExperience() {
         <div className="story-container identity-note">In the Java reference integration, a WebAuthn assertion is validated separately and the server binds the pending passkey request to the same transaction and Torn Note authorization context. The browser showcase here is illustrative; it does not run a live passkey ceremony.</div>
       </section>
 
-      <section className="story-benefits">
+      <section className="story-benefits" data-sc-act="flow" data-sc-drift="#e9e3d8">
         <div className="story-container">
           <div className="story-section-heading"><div className="story-eyebrow">WHY THIS COULD MATTER</div><h2>Make high-impact actions <span>harder to misuse.</span></h2></div>
-          <div className="benefit-grid">
+          <div className="benefit-grid" data-sc-reveal="up">
             <article><span>01</span><h3>Less reusable authority</h3><p>A note is designed for a bounded authorization, not an all-purpose credential that can be reused indefinitely.</p></article>
             <article><span>02</span><h3>Clearer intent</h3><p>Bind approval to the exact operation so a valid proof cannot simply be moved to a different transaction.</p></article>
             <article><span>03</span><h3>Verifiable issuance</h3><p>Check that a note belongs to an issuer-committed inventory rather than trusting a note-shaped object presented by a caller.</p></article>
@@ -237,8 +240,8 @@ export function StoryExperience() {
         </div>
       </section>
 
-      <section className="story-research" id="research">
-        <div className="story-container research-grid">
+      <section className="story-research" id="research" data-sc-act="flow" data-sc-drift="#e9e3d8">
+        <div className="story-container research-grid" data-sc-in>
           <div><div className="story-eyebrow">FOR THE CURIOUS</div><h2>There's serious cryptography underneath the simple story.</h2><p>The current Java research prototype uses established primitives rather than claiming a new signature algorithm.</p><a className="story-primary-link" href="https://github.com/darshanredkar11/torn-note-cryptography" target="_blank" rel="noreferrer">Explore the code <ArrowUpRight size={16}/></a></div>
           <div className="research-facts">
             <div><span>01</span><strong>Ed25519 signatures</strong><small>Independent note-specific signing factors.</small></div>
@@ -249,7 +252,7 @@ export function StoryExperience() {
         </div>
       </section>
 
-      <section className="story-status">
+      <section className="story-status" data-sc-act="flow" data-sc-drift="#e1d9ce">
         <div className="story-container">
           <div className="story-eyebrow">HONEST ABOUT THE STAGE</div>
           <h2>A research prototype, <span>not a finished security product.</span></h2>
@@ -262,6 +265,7 @@ export function StoryExperience() {
       </section>
 
       <footer className="story-footer"><div className="story-container footer-story-inner"><a href="#" className="story-brand"><span className="story-brand-mark"><NoteGlyph small/></span><span>TORN <i>NOTE</i></span></a><p>Authorization should be as specific as the action it protects.</p><a href="https://github.com/darshanredkar11/torn-note-cryptography" target="_blank" rel="noreferrer">Open research repository <ArrowUpRight size={14}/></a></div></footer>
+    <Script src={typeof window !== "undefined" && window.location.pathname.startsWith("/torn-note-cryptography") ? "/torn-note-cryptography/scrollcraft/scrollcraft.js" : "/scrollcraft/scrollcraft.js"} strategy="afterInteractive" onReady={() => { const engine = (window as unknown as { ScrollCraft?: { mount: (root: HTMLElement) => unknown } }).ScrollCraft; engine?.mount(document.body); }} />
     </main>
   );
 }
