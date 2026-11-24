@@ -729,3 +729,9 @@ body { background: #e9e3d8; color: #191816; }
   .benefit-grid article, .benefit-grid article:nth-child(even) { padding: 24px 0; border-right: 0; }
   .story-hero::before { right: -36vw; top: 12%; width: 78vw; height: 78vw; }
 }
+
+.hero-folio-art { position: absolute; right: 4%; bottom: 8%; z-index: 1; display: grid; gap: 10px; justify-items: center; color: #9d3e2d; font: 9px "DM Mono", monospace; letter-spacing: .14em; opacity: .65; pointer-events: none; }
+.hero-folio-art .folio-mark { display: grid; place-items: center; width: clamp(110px, 15vw, 190px); aspect-ratio: 1; border: 1px solid rgba(157,62,45,.36); border-radius: 50%; font: italic clamp(42px, 6vw, 82px) "DM Serif Display", Georgia, serif; color: #9d3e2d; position: relative; }
+.hero-folio-art .folio-mark::before, .hero-folio-art .folio-mark::after { content: ""; position: absolute; border: 1px solid rgba(157,62,45,.22); border-radius: 50%; inset: 14%; }
+.hero-folio-art .folio-mark::after { inset: 28%; border-style: dashed; }
+@media (max-width: 720px) { .hero-folio-art { right: 0; bottom: 3%; opacity: .42; } .hero-folio-art .folio-mark { width: 112px; } }
