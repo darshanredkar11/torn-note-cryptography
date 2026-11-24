@@ -5,7 +5,7 @@ import Script from "next/script";
 import { AnimatePresence, motion } from "motion/react";
 import {
   ArrowDown, ArrowRight, ArrowUpRight, Check, CheckCircle2, Fingerprint,
-  LockKeyhole, RefreshCw, ShieldCheck, ShieldX, Wallet, X,
+  LockKeyhole, RefreshCw, ShieldX, Wallet, X,
 } from "lucide-react";
 
 const rise = {
@@ -35,29 +35,6 @@ function NoteGlyph({ small = false }: { small?: boolean }) {
       <circle cx="60" cy="73" r="29" stroke="currentColor" strokeOpacity=".25" />
       <defs><linearGradient id="paper" x1="13" y1="8" x2="107" y2="139" gradientUnits="userSpaceOnUse"><stop stopColor="#D9FFF2"/><stop offset="1" stopColor="#91CDBD"/></linearGradient></defs>
     </svg>
-  );
-}
-
-function HeroAnimation() {
-  return (
-    <div className="story-hero-art" aria-label="Illustration of a one-time authorization note moving through verification">
-      <div className="art-orbit orbit-one" /><div className="art-orbit orbit-two" />
-      <motion.div className="art-passkey" animate={{ y: [0, -8, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}>
-        <Fingerprint size={23} /><span>IDENTITY</span><strong>It's you</strong>
-      </motion.div>
-      <motion.div className="art-note" initial={{ opacity: 0, scale: .82, rotate: -9 }} animate={{ opacity: 1, scale: 1, rotate: 4 }} transition={{ duration: 1, delay: .25, type: "spring", stiffness: 90 }}>
-        <NoteGlyph />
-        <span className="art-note-tag">ONE-TIME NOTE</span>
-        <strong>AUTHORIZATION</strong>
-        <small>Issued · Bound · Verifiable</small>
-      </motion.div>
-      <motion.div className="art-verifier" animate={{ y: [0, 8, 0] }} transition={{ duration: 5, delay: 1, repeat: Infinity, ease: "easeInOut" }}>
-        <ShieldCheck size={22} /><span>VERIFIER</span><strong>Check the action</strong>
-      </motion.div>
-      <motion.div className="art-particle particle-a" animate={{ x: [0, 38, 0], y: [0, -18, 0], opacity: [.2, 1, .2] }} transition={{ duration: 4, repeat: Infinity }} />
-      <motion.div className="art-particle particle-b" animate={{ x: [0, -28, 0], y: [0, 22, 0], opacity: [.2, 1, .2] }} transition={{ duration: 5, repeat: Infinity }} />
-      <div className="art-caption"><span className="pulse-dot" /> A capability, not another password</div>
-    </div>
   );
 }
 
@@ -95,27 +72,27 @@ export function StoryExperience() {
       <section className="story-hero" data-sc-act="flow" data-sc-drift="#e9e3d8">
         <div className="story-hero-grid" />
         <div className="story-container story-hero-inner">
-          <motion.div className="story-hero-copy" data-sc-in initial="hidden" animate="visible" variants={rise}>
+          <motion.div className="story-hero-copy" initial="hidden" animate="visible" variants={rise}>
             <div className="story-eyebrow"><span className="pulse-dot" /> A NEW WAY TO THINK ABOUT AUTHORIZATION</div>
             <h1>Authority should be<br/><em>as specific as the action.</em></h1>
             <p>Logging in proves your identity. But should a login alone be enough to change a supplier's bank account, move money, or grant someone administrator access?</p>
             <p className="story-hero-answer">Torn Note explores a better way to authorize high-impact actions: with a specific, verifiable capability that can be used only once.</p>
             <a className="story-primary-link" href="#problem">See why it matters <ArrowDown size={16}/></a>
           </motion.div>
-          <HeroAnimation />
+          <div className="hero-folio-art" aria-hidden="true"><span>NOTE / 01</span><div className="folio-mark">TN</div><span>ISSUED · NOT REUSABLE</span></div>
         </div>
         <div className="story-scroll-hint">SCROLL TO UNFOLD THE IDEA <span /></div>
       </section>
 
       <section className="story-problem" id="problem" data-sc-act="flow" data-sc-drift="#e9e3d8">
-        <div className="story-container problem-grid" data-sc-in>
-          <motion.div className="problem-copy" data-sc-reveal="left" variants={rise} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+        <div className="story-container problem-grid">
+          <motion.div className="problem-copy" variants={rise initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <div className="story-eyebrow">THE EVERYDAY PROBLEM</div>
             <h2>A familiar request.<br/><span>A very expensive mistake.</span></h2>
             <p>Your finance team receives an email from a known supplier. Their bank details have changed. The employee is legitimate. The login is legitimate. But is the requested change legitimate?</p>
             <div className="problem-quote"><span>INCOMING REQUEST</span><strong>“We've changed our bank account. Please update the details before the next payment.”</strong><small>Northstar Components · Supplier email</small></div>
           </motion.div>
-          <motion.div className="fraud-scene" data-sc-reveal="right" initial={{ opacity: 0, x: 35 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: .8 }}>
+          <motion.div className="fraud-scene" initial={{ opacity: 0, x: 35 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: .8 }}>
             <div className="fraud-scene-head"><span>PAYMENT WORKFLOW</span><span className="fraud-risk"><i/> RISK SCENARIO</span></div>
             <div className="fraud-flow">
               <div className="fraud-actor"><div className="actor-avatar">FC</div><span>Finance team</span><small>Authenticated employee</small></div>
