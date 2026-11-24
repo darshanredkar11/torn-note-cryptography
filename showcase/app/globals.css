@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
 @import "tailwindcss";
 @import "./scrollcraft.css";
 @custom-variant dark (&:is(.dark *));
@@ -557,7 +558,6 @@ button { font: inherit; }
   --sc-font-display: "DM Serif Display", Georgia, serif;
   --sc-font-text: "DM Sans", system-ui, sans-serif;
 }
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap');
 body { background: #e9e3d8; color: #191816; }
 .story-site { background: #e9e3d8; color: #191816; }
 .story-header { position: relative; background: rgba(233,227,216,.96); border-bottom: 1px solid rgba(25,24,22,.18); backdrop-filter: none; }
