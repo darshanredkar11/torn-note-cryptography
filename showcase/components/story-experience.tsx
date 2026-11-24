@@ -86,7 +86,7 @@ export function StoryExperience() {
 
       <section className="story-problem" id="problem" data-sc-act="flow" data-sc-drift="#e9e3d8">
         <div className="story-container problem-grid">
-          <motion.div className="problem-copy" variants={rise initial="hidden" whileInView="visible" viewport={{ once: true }}>
+          <motion.div className="problem-copy" variants={rise} initial="hidden" whileInView="visible" viewport={{ once: true }}>
             <div className="story-eyebrow">THE EVERYDAY PROBLEM</div>
             <h2>A familiar request.<br/><span>A very expensive mistake.</span></h2>
             <p>Your finance team receives an email from a known supplier. Their bank details have changed. The employee is legitimate. The login is legitimate. But is the requested change legitimate?</p>
