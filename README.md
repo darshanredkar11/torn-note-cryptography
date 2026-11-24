@@ -29,6 +29,21 @@ The research asks whether pre-issued finite inventory adds a meaningful property
 
 The current implementation is a 3-of-3 policy implemented as independent signatures. The physical torn-note analogy is intuition only; it is not a substitute for a protocol specification or security proof.
 
+### Cryptographic precision and security boundary
+
+The complete prototype policy requires **three separate Ed25519 signatures**: one from the master identity key and one from each of the two note-specific keys. The two note-specific keys form a 2-of-2 pair, but the complete policy is 3-of-3. Ed25519 itself is not an aggregate or native threshold multisignature scheme. “Independent” is a deployment property as well as a key-count property: keys should be generated separately and protected with appropriately separated custody. Merely creating three keys in one process does not provide meaningful operational independence.
+
+A signed manifest provides an **offline-verifiable inventory membership and per-batch issuance bound**. If a manifest commits to N leaves, a verifier can check membership against that manifest without contacting the issuer. This does not automatically establish a global merchant-wide quota across multiple manifests or prevent the issuer from signing another batch. Global budgets require an explicit issuer policy and, where necessary, shared accounting. It also does not prevent a compromised holder from spending notes already in its possession.
+
+Single-use enforcement is different: replay and concurrent-spend prevention require an **online, durable, strongly consistent verifier-side spend store**. The core-mode uniqueness scope should include the issuer/batch and note identifier; the ZK-mode scope should include the issuer/batch and note-level nullifier. The same note must not be reissued into multiple batches unless cross-batch replay is explicitly addressed.
+
+For an external payout connector, a database insert alone cannot make the remote side effect exactly-once. A robust integration should atomically record authorization consumption and an execution/outbox record, then dispatch with a stable payout idempotency key. Delivery may be retried; exactly-once external effects depend on the connector's idempotency semantics.
+
+### Encoding and Merkle specification still to freeze
+
+Before interoperability or publication claims, the protocol must normatively specify the manifest serialization and fields, leaf and internal-node domain separation, tree shape and odd-leaf handling, and the exact authorization message. A recommended Merkle structure uses distinct leaf and internal-node prefixes (for example, `0x00` and `0x01`) and includes the leaf count in the signed manifest. The transaction profile must choose one deterministic encoding—such as RFC 8785 JCS or RFC 8949 core deterministic CBOR—and define numeric, Unicode, absent-field, and length rules. Do not accept multiple encodings as equivalent within one protocol version.
+
+
 ## Implemented prototype vs. research directions
 
 ### Prototype scope (v0.1)
