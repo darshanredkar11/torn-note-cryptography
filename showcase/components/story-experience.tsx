@@ -70,7 +70,7 @@ export function StoryExperience() {
       </header>
 
       <section className="story-hero" data-sc-act="flow" data-sc-drift="#e9e3d8">
-        <div className="story-hero-grid" />
+        <div className="story-hero-grid" data-sc-parallax="-0.45" />
         <div className="story-container story-hero-inner">
           <motion.div className="story-hero-copy" initial="hidden" animate="visible" variants={rise}>
             <div className="story-eyebrow"><span className="pulse-dot" /> A NEW WAY TO THINK ABOUT AUTHORIZATION</div>
@@ -79,7 +79,7 @@ export function StoryExperience() {
             <p className="story-hero-answer">Torn Note explores a better way to authorize high-impact actions: with a specific, verifiable capability that can be used only once.</p>
             <a className="story-primary-link" href="#problem">See why it matters <ArrowDown size={16}/></a>
           </motion.div>
-          <div className="hero-folio-art" aria-hidden="true"><span>NOTE / 01</span><div className="folio-mark">TN</div><span>ISSUED · NOT REUSABLE</span></div>
+          <div className="hero-folio-art" data-sc-parallax="0.7" aria-hidden="true"><span>NOTE / 01</span><div className="folio-mark">TN</div><span>ISSUED · NOT REUSABLE</span></div>
         </div>
         <div className="story-scroll-hint">SCROLL TO UNFOLD THE IDEA <span /></div>
       </section>
@@ -195,7 +195,7 @@ export function StoryExperience() {
             <h2>Keep the passkey.<br/><span>Give the action its own proof.</span></h2>
             <p>Passkeys and Torn Note solve related but different problems. A passkey helps establish that the right person is present. Torn Note adds a separate authorization proof for the specific business action.</p>
           </div>
-          <div className="identity-compare">
+          <div className="identity-compare" data-sc-tilt="2">
             <div className="identity-item"><div className="identity-symbol"><Fingerprint size={30}/></div><div><span>PASSKEY · IDENTITY</span><strong>Is this really you?</strong><small>Validates an authenticator assertion and a fresh challenge.</small></div></div>
             <div className="identity-plus">+</div>
             <div className="identity-item note-identity"><div className="identity-symbol"><NoteGlyph small/></div><div><span>TORN NOTE · AUTHORIZATION</span><strong>May this exact action proceed?</strong><small>Checks an issued capability, its proof and its transaction binding.</small></div></div>
