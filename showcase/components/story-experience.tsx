@@ -242,7 +242,7 @@ export function StoryExperience() {
       </section>
 
       <footer className="story-footer"><div className="story-container footer-story-inner"><a href="#" className="story-brand"><span className="story-brand-mark"><NoteGlyph small/></span><span>TORN <i>NOTE</i></span></a><p>Authorization should be as specific as the action it protects.</p><a href="https://github.com/darshanredkar11/torn-note-cryptography" target="_blank" rel="noreferrer">Open research repository <ArrowUpRight size={14}/></a></div></footer>
-    <Script src={typeof window !== "undefined" && window.location.pathname.startsWith("/torn-note-cryptography") ? "/torn-note-cryptography/scrollcraft/scrollcraft.js" : "/scrollcraft/scrollcraft.js"} strategy="afterInteractive" onReady={() => { const engine = (window as unknown as { ScrollCraft?: { mount: (root: HTMLElement) => unknown } }).ScrollCraft; engine?.mount(document.body); }} />
+    <Script src={process.env.NEXT_PUBLIC_GITHUB_PAGES === "true" ? "/torn-note-cryptography/scrollcraft/scrollcraft.js" : "/scrollcraft/scrollcraft.js"} strategy="afterInteractive" onReady={() => { const engine = (window as unknown as { ScrollCraft?: { mount: (root: HTMLElement) => unknown } }).ScrollCraft; engine?.mount(document.body); }} />
     </main>
   );
 }
