@@ -29,21 +29,27 @@ L = H_leaf("TORN-LEAF/v2", noteId, X, ZA, ZB, r)
 
 ## Nullifier
 
-Use a domain-separated keyed-hash construction:
+Use a domain-separated **note-level** nullifier construction:
 
 K_N = H_null-key("TORN-NULLIFIER-KEY/v2", x, zA, zB)
 
-eta = H_null("TORN-NULLIFIER/v2", K_N, noteId)
+eta = H_null("TORN-NULLIFIER/v2", K_N, noteId, batch_id)
 
-This is intentionally not described as a PRF without a corresponding security argument.
+The nullifier is derived from the note, not from the transaction. In particular, do **not** include Dtx or the transaction payload in eta: doing so would produce a different nullifier for each transaction and would permit the same note to be presented against multiple transactions without colliding in the spend store.
+
+Here batch_id is the immutable issuance scope for the note. The issuer must guarantee that a note is assigned to only one accepted batch. If a note may appear in multiple batches, use a globally stable note scope in the nullifier derivation instead; otherwise the same note could yield different nullifiers across batches.
+
+This construction is not described as a PRF without a corresponding security argument.
 
 ## Transaction binding
 
-Dtx = H_tx("TORN-TX/v2", ROOT, eta, Canonical(m))
+Dtx = H_tx("TORN-TX/v2", ROOT, batch_id, eta, Canonical(m))
+
+The verifier independently computes the expected Dtx from its authoritative transaction state. Dtx is a **separate public input to the proof**, not an input to the nullifier derivation.
 
 The SNARK public statement is:
 
-(ROOT, eta, Dtx)
+(ROOT, batch_id, eta, Dtx)
 
 ## Relation
 
@@ -56,37 +62,37 @@ such that:
 1. X = xG, ZA = zAG, ZB = zBG;
 2. L = H_leaf(noteId, X, ZA, ZB, r);
 3. MerkleVerify(L, path, ROOT) = 1;
-4. eta = H_null(H_null-key(x, zA, zB), noteId);
-5. Dtx = H_tx(ROOT, eta, Canonical(m)).
+4. eta = H_null(H_null-key(x, zA, zB), noteId, batch_id);
+5. Dtx = H_tx(ROOT, batch_id, eta, Canonical(m)), with Dtx equal to the verifier-computed digest for the payout.
 
 ## Spend transition
 
 Verification alone does not prevent a race.
 
-The ledger must atomically perform:
+The durable verifier must atomically consume eta in the appropriate issuer/batch scope and record the logical payout execution intent. A recommended systems pattern is one database transaction that:
 
-if eta is unused:
-    reserve eta
-    settle m
-else:
-    reject
+1. inserts the unique spend key (issuer scope, batch_id, eta);
+2. records the authorized payout state transition;
+3. inserts an outbox event with a stable payout idempotency key.
 
-If settlement fails, the reservation must roll back or the whole transition must be transactional.
+After commit, a worker dispatches the outbox event. Retries must reuse the same idempotency key. This gives durable at-least-once dispatch; exactly-once external effects depend on the connector honoring idempotency. A crash after the database commit but before dispatch should cause outbox retry, not release of eta for a different transaction.
+
+The exact transaction boundary and recovery protocol must be validated for the chosen connector and payout state machine.
 
 ## Privacy claim
 
 The public statement is designed to contain no leaf index or note public keys.
 
-Actual unlinkability additionally depends on:
+The verifier still observes the batch identifier/root, nullifier, transaction digest, and timing. Actual unlinkability additionally depends on:
 
-- the number of eligible notes in the root;
-- transaction metadata;
-- root reuse;
-- issuance policy;
+- the number of genuinely eligible notes in the batch (the effective anonymity set);
+- transaction metadata and payout amount/recipient patterns;
+- root and batch reuse;
+- issuance and note-allocation policy;
 - network metadata;
 - application-level identifiers.
 
-Therefore the protocol does not claim that a root's tree capacity equals its anonymity set.
+Therefore the protocol does not claim that a root's tree capacity equals its anonymity set or that hiding the leaf alone establishes unlinkability.
 
 ## Non-claims
 
