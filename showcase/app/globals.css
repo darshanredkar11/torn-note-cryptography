@@ -679,3 +679,53 @@ body { background: #e9e3d8; color: #191816; }
 @media (prefers-reduced-motion: reduce) {
   .story-site *, .story-site *::before, .story-site *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Editorial refinement pass */
+.story-identity, .story-benefits { background: #e9e3d8; color: #191816; border-block: 1px solid rgba(25,24,22,.16); }
+.identity-grid h2, .benefit-grid h3 { color: #191816; font-family: "DM Serif Display", Georgia, serif; font-weight: 400; letter-spacing: -.04em; }
+.identity-grid > div:first-child > p { color: #615b54; line-height: 1.85; }
+.identity-compare { border: 1px solid rgba(25,24,22,.2); border-radius: 0; background: #ded7cc; box-shadow: none; }
+.identity-item { border-color: rgba(25,24,22,.14); color: #191816; }
+.identity-item span, .identity-item small { color: #6c665f; }
+.identity-item strong { color: #191816; font-family: "DM Serif Display", Georgia, serif; font-size: 22px; font-weight: 400; }
+.identity-symbol { color: #9d3e2d; border: 1px solid rgba(157,62,45,.22); border-radius: 0; background: rgba(157,62,45,.05); }
+.identity-plus { color: #9d3e2d; }
+.identity-outcome { color: #3e6858; border-color: rgba(25,24,22,.16); background: rgba(255,255,255,.2); }
+.identity-note { color: #6a645d; border-top: 1px solid rgba(25,24,22,.14); }
+.benefit-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0; border-top: 1px solid rgba(25,24,22,.16); }
+.benefit-grid article { min-height: 190px; padding: 26px 24px 26px 0; border-bottom: 1px solid rgba(25,24,22,.16); background: transparent; }
+.benefit-grid article:nth-child(odd) { border-right: 1px solid rgba(25,24,22,.16); }
+.benefit-grid article:nth-child(even) { padding-left: 24px; }
+.benefit-grid article > span { color: #9d3e2d; font: 10px "DM Mono", monospace; }
+.benefit-grid h3 { margin: 18px 0 8px; font-size: 25px; }
+.benefit-grid p { color: #615b54; font-size: 12px; line-height: 1.8; }
+.research-grid > div:first-child h2 { color: #191816; font-family: "DM Serif Display", Georgia, serif; font-weight: 400; font-size: clamp(34px,4.4vw,58px); line-height: 1.04; letter-spacing: -.045em; }
+.research-grid > div:first-child p { color: #615b54; line-height: 1.85; }
+.research-facts { border-block: 1px solid rgba(25,24,22,.16); }
+.research-facts > div { border-bottom-color: rgba(25,24,22,.16); }
+.research-facts span { color: #9d3e2d; font-family: "DM Mono", monospace; }
+.research-facts strong { color: #191816; font-family: "DM Serif Display", Georgia, serif; font-weight: 400; font-size: 20px; }
+.research-facts small { color: #615b54; }
+.status-columns { border-top: 1px solid rgba(25,24,22,.16); }
+.status-columns > div { border-color: rgba(25,24,22,.16); }
+.status-column-label { font-family: "DM Mono", monospace; }
+.status-columns li { color: #615b54; }
+.status-disclaimer { color: #6c665f; border-top: 1px solid rgba(25,24,22,.16); }
+.story-footer { background: #ded7cc; color: #6a645d; }
+.story-footer .story-brand { color: #191816; }
+.story-footer .story-footer-inner, .footer-story-inner { border-color: rgba(25,24,22,.16); }
+.story-footer p { color: #615b54; }
+.story-footer a:last-child { color: #9d3e2d; }
+.story-hero::before { content: ""; position: absolute; right: -4vw; top: 15%; width: min(44vw, 520px); height: min(44vw, 520px); border: 1px solid rgba(25,24,22,.12); border-radius: 50%; box-shadow: 0 0 0 42px rgba(25,24,22,.015), 0 0 0 90px rgba(25,24,22,.015); pointer-events: none; }
+.story-hero-copy { max-width: 900px; }
+.story-hero-copy > p:first-of-type { font-size: clamp(15px,1.5vw,18px); }
+.story-hero-copy .story-eyebrow { margin-bottom: 8px; }
+.story-header { min-height: 74px; }
+.story-header nav { gap: 24px; }
+.story-header nav a { font-size: 11px; }
+.story-site :focus-visible { outline: 2px solid #9d3e2d; outline-offset: 4px; }
+@media (max-width: 720px) {
+  .benefit-grid { grid-template-columns: 1fr; }
+  .benefit-grid article, .benefit-grid article:nth-child(even) { padding: 24px 0; border-right: 0; }
+  .story-hero::before { right: -36vw; top: 12%; width: 78vw; height: 78vw; }
+}
